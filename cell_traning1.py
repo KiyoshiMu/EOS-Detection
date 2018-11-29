@@ -64,7 +64,7 @@ def gen_generators(train_dir, validation_dir):
 
     return validation_generator, train_generator
 
-def gen_load_model(mp='modelH2.h5'):
+def gen_load_model(mp='sepCc.h5'):
     model = models.load_model(mp)
     print("Loaded model from disk")
     return model
@@ -74,11 +74,11 @@ def gen_model():
     model.add(layers.Conv2D(32, (3, 3), activation='relu',
                             input_shape=(96, 96, 3)))
     model.add(layers.MaxPooling2D((2, 2)))
-    model.add(layers.Conv2D(64, (3, 3), activation='relu'))
+    model.add(layers.SeparableConv2D(128, (3, 3), activation='relu'))
     model.add(layers.MaxPooling2D((2, 2)))
-    model.add(layers.Conv2D(128, (3, 3), activation='relu'))
+    model.add(layers.SeparableConv2D(128, (3, 3), activation='relu'))
     model.add(layers.MaxPooling2D((2, 2)))
-    model.add(layers.Conv2D(128, (3, 3), activation='relu'))
+    model.add(layers.SeparableConv2D(128, (3, 3), activation='relu'))
     model.add(layers.MaxPooling2D((2, 2)))
     model.add(layers.Flatten())
     model.add(layers.Dropout(0.5))
@@ -122,7 +122,7 @@ def main():
                 optimizer=optimizers.RMSprop(),
                 metrics=['acc'])
     cheak_list = [EarlyStopping(monitor='loss', patience=10),
-                ModelCheckpoint(filepath='modelcc.h5', monitor='acc', save_best_only=True),
+                ModelCheckpoint(filepath='sepCc.h5', monitor='acc', save_best_only=True),
                 TensorBoard(log_dir='cell_log', histogram_freq=0)]
 
     history = model.fit_generator(

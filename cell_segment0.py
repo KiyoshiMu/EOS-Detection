@@ -29,12 +29,22 @@ def from_label(label_img):
     label_img (str), the path of a labeled image."""
     frame = cv2.imread(label_img)
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-    lower_red = np.array([50,100, 50])
-    upper_red = np.array([70,255, 255])
-    mask = cv2.inRange(hsv, lower_red, upper_red)
+    lower_green = np.array([50,100, 50])
+    upper_green = np.array([70,255, 255])
+    mask = cv2.inRange(hsv, lower_green, upper_green)
     # res = cv2.bitwise_and(frame,frame, mask= mask)
     cnts = cv2.findContours(mask, cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)[-2]
     points = [middle(cnt) for cnt in cnts]
+    # if multi:
+    #     confirm = []
+    #     lower_black = np.array([0, 0, 0])
+    #     upper_black = np.array([0, 0, 20])
+    #     mask = cv2.inRange(hsv, lower_black, upper_black)
+    #     cnts = cv2.findContours(mask, cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)[-2]
+    #     for point in points:
+    #         if not any([islabel(point, c) for c in cnts]):
+    #             confirm.append(point)
+            
     return points
 
 def islabel(point, cnt):
@@ -89,7 +99,9 @@ def segment(file, label, dst, name='name', count=0, nocount=0):
 #             continue
 #         if w / h < 0.5 or w / h > 2:
 #             continue
-        one = copy(image_c[y:y+h, x:x+w])
+        if h > w:
+            w = h
+        one = copy(image_c[y:y+w, x:x+w])
         one_adjust = cv2.resize(one, (96, 96))
         
         if any([islabel(point, c) for point in points]):
