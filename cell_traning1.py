@@ -11,7 +11,7 @@ import sys
 import matplotlib.pyplot as plt
 
 def move(yes_base, no_base):
-    seed = 42
+    seed(42)
     yes = os.listdir(yes_base)
     yes_train = math.floor(len(yes) * 0.8)
 #     yes_test = math.floor(len(yes) * 0.9)
@@ -51,14 +51,17 @@ def gen_generators(train_dir, validation_dir):
         height_shift_range=0.2,
         shear_range=0.2,
         zoom_range=0.2,
-        horizontal_flip=True,)
+        channel_shift_range=0.2,
+        brightness_range=(0.8, 1.2),
+        horizontal_flip=True,
+        vertical_flip=True)
 
     train_generator = train_datagen.flow_from_directory(
             # This is the target directory
             train_dir,
-            # All images will be resized to 150x150
+            # All images will be resized to 96x96
             target_size=(96, 96),
-            batch_size=32,
+            batch_size=batch,
             # Since we use binary_crossentropy loss, we need binary labels
             class_mode='binary')
 
@@ -74,15 +77,15 @@ def gen_model():
     model.add(layers.Conv2D(32, (3, 3), activation='relu',
                             input_shape=(96, 96, 3)))
     model.add(layers.MaxPooling2D((2, 2)))
-    model.add(layers.SeparableConv2D(128, (3, 3), activation='relu'))
+    model.add(layers.SeparableConv2D(64, (3, 3), activation='relu'))
     model.add(layers.MaxPooling2D((2, 2)))
-    model.add(layers.SeparableConv2D(128, (3, 3), activation='relu'))
+    model.add(layers.SeparableConv2D(64, (3, 3), activation='relu'))
     model.add(layers.MaxPooling2D((2, 2)))
-    model.add(layers.SeparableConv2D(128, (3, 3), activation='relu'))
+    model.add(layers.SeparableConv2D(64, (3, 3), activation='relu'))
     model.add(layers.MaxPooling2D((2, 2)))
     model.add(layers.Flatten())
     model.add(layers.Dropout(0.5))
-    model.add(layers.Dense(512, activation='relu'))
+    model.add(layers.Dense(256, activation='relu'))
     model.add(layers.Dense(1, activation='sigmoid'))
     return model
 
@@ -124,10 +127,10 @@ def main():
     cheak_list = [EarlyStopping(monitor='loss', patience=10),
                 ModelCheckpoint(filepath='sepCc.h5', monitor='acc', save_best_only=True),
                 TensorBoard(log_dir='cell_log', histogram_freq=0)]
-
+    print(len(train_generator))
     history = model.fit_generator(
         train_generator,
-        steps_per_epoch=100,
+        steps_per_epoch=int(7726/batch),
         epochs=300,
         callbacks=cheak_list,
         validation_data=validation_generator,
@@ -135,6 +138,7 @@ def main():
     plot_process(history)
 
 if __name__ == "__main__":
+    batch = int(sys.argv[4])
     if sys.argv[1] == 'move':
         move(sys.argv[2], sys.argv[3])
     else:
