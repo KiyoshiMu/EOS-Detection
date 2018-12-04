@@ -127,22 +127,25 @@ def rename(base):
             dst = os.path.join(base, name)
             os.rename(sta, dst)
 
-def main(base, dst):
-    path_pool = [os.path.join(base, f) for f in os.listdir(base)]
+def couple(base, label):
+    imgs = [os.path.join(base, f) for f in os.listdir(base)]
+    lables = dict([(f.split('.')[0].replace('label', ''), os.path.join(label, f)) for f in os.listdir(label)])
+    for img in imgs:
+        name = os.path.basename(img).split('.')[0]
+        yield img, lables[name], name
+
+def main(base, label, dst):
+    os.makedirs(dst, exist_ok=True)
     count, nocount = 0, 0
-    for i in range(0, len(path_pool), 2):
-        pri = path_pool[i]
-        label = path_pool[i+1]
-        if 'label' in pri:
-            pri, label = label, pri
-        fn = os.path.basename(pri)
+    for pri, label, fn in couple(base, label):
         count, nocount = segment(pri, label, dst, name=fn, count=count, nocount=nocount)
-        print(i)
+        print(count)
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument('-f', '--func', required=False, help='if you need rename the label images, input "re"')
     ap.add_argument('-i', '--input', required=True, help='path to the input directory')
+    ap.add_argument('-l', '--label', required=True, help='path to the label directory')
     ap.add_argument('-o', '--output', required=False, help='path to the output directory')
     args = vars(ap.parse_args())
     base = args['input']
@@ -150,7 +153,8 @@ if __name__ == "__main__":
         rename(base)
     else:
         if args['output']:
+            label = args['label']
             dst = args['output']
-            main(base, dst)
+            main(base, label, dst)
         else:
             print('segmentation needs output path')
