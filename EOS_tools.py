@@ -19,12 +19,15 @@ def point_detect(hsv):
     points = [middle(cnt) for cnt in cnts]
     return points
 
+def get_name(path):
+    return os.path.basename(path).split('.')[0]
+
 def path_matcher(dir_img, dir_label):
-    img_path_list = [os.path.join(dir_img, f) for f in os.listdir(dir_img)]
-    label_path_dict = dict([(f.split('.')[0].replace('label', ''),
-                             os.path.join(dir_label, f)) for f in os.listdir(dir_label)])
+    img_path_list = path_list_creator(dir_img)
+    label_path_list = path_list_creator(dir_label)
+    label_path_dict = dict([(get_name(p), p) for p in label_path_list])
     for img_path in img_path_list:
-        name = os.path.basename(img_path).split('.')[0]
+        name = get_name(img_path)
         label_path = label_path_dict.get(name)
         if label_path:
             yield img_path, label_path, name
@@ -40,7 +43,7 @@ def path_list_creator(dir_img, dir_label=None):
             label_p_list.append(label_p)
         return img_p_list, label_p_list
     else:
-        img_p_list = [os.path.join(dir_img, f) for f in os.listdir(dir_img)]
+        img_p_list = [os.path.join(item[0], f_p) for item in os.walk(dir_img) for f_p in item[2] if item[2]]
         return img_p_list
 
 def read_from_path_list(path_list, islabel=False, w=256, h=256):
