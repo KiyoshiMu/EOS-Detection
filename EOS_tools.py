@@ -1,0 +1,64 @@
+import cv2
+import os
+import numpy as np
+
+def middle(cnt):
+    M = cv2.moments(cnt)
+    if M['m00'] == 0:
+        return (0, 0)
+    cx = int(M['m10']/M['m00'])
+    cy = int(M['m01']/M['m00'])
+    return (cx, cy)
+
+def point_detect(hsv):
+    """"""
+    lower_green = np.array([50,100, 50])
+    upper_green = np.array([70,255, 255])
+    mask = cv2.inRange(hsv, lower_green, upper_green)
+    cnts = cv2.findContours(mask, cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)[-2]
+    points = [middle(cnt) for cnt in cnts]
+    return points
+
+def path_matcher(dir_img, dir_label):
+    img_path_list = [os.path.join(dir_img, f) for f in os.listdir(dir_img)]
+    label_path_dict = dict([(f.split('.')[0].replace('label', ''),
+                             os.path.join(dir_label, f)) for f in os.listdir(dir_label)])
+    for img_path in img_path_list:
+        name = os.path.basename(img_path).split('.')[0]
+        label_path = label_path_dict.get(name)
+        if label_path:
+            yield img_path, label_path, name
+
+def inside(point, cnt):
+    return cv2.pointPolygonTest(cnt, point, True) >= -3
+
+def path_list_creator(dir_img, dir_label=None):
+    img_p_list, label_p_list = [], []
+    if dir_label:
+        for img_p, label_p, _ in path_matcher(dir_img, dir_label):
+            img_p_list.append(img_p)
+            label_p_list.append(label_p)
+        return img_p_list, label_p_list
+    else:
+        img_p_list = [os.path.join(dir_img, f) for f in os.listdir(dir_img)]
+        return img_p_list
+
+def read_from_path_list(path_list, islabel=False, w=256, h=256):
+    dtype = np.bool if islabel else np.uint8
+    channel = 1 if islabel else 3
+    data = np.zeros((len(path_list), h, w, channel), dtype=dtype)
+    for n, path in enumerate(path_list):
+        if islabel:
+            img = cv2.imread(path, 0)
+            img = cv2.resize(img, (w, h)).reshape((h, w, 1))
+        else:
+            img = cv2.imread(path)[:,:,:channel]
+            img = cv2.resize(img, (w, h))
+        data[n] = img
+    return data
+
+def data_creator(dir_img, dir_label):
+    img_p_list, label_p_list = path_list_creator(dir_img, dir_label)
+    img_data = read_from_path_list(img_p_list)
+    label_data = read_from_path_list(label_p_list, islabel=True)
+    return img_data, label_data
