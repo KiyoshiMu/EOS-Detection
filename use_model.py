@@ -67,63 +67,49 @@ class Unet_predictor:
                 cv2.imwrite(os.path.join(visualize_dst, ID+'.jpg'), img_out)
         self.show_result()
 
-    def _precision_at(self, threshold, iou):
-        matches = iou > threshold
-        true_positives = np.sum(matches, axis=1) == 1   # Correct objects
-        false_positives = np.sum(matches, axis=0) == 0  # Missed objects
-        false_negatives = np.sum(matches, axis=1) == 0  # Extra objects
-        tp, fp, fn = np.sum(true_positives), np.sum(false_positives), np.sum(false_negatives)
-        return tp, fp, fn
+    def _overlap(self, mask_img, pred_mask_img):
+        cover = mask_img / 2 + pred_mask_img / 2
+        cover = cover.astype(np.uint8)
+        cover_cnts = mask2contour(cover, iterations=1)
+        return len(cover_cnts)
 
-    def metric(self, img_p, label_p, name=None):
+    def metric(self, img_p: str, label_p: str, name=None) -> None:
+        """true_positives = Correct objects
+        false_positives = Missed objects
+        false_negatives = Extra objects
+        (PPV), Precision = Σ True positive / Σ Predicted condition positive
+        Sensitivity, probability of detection = Σ True positive / Σ Condition positive"""
         sys.stdout = open('log.txt', 'a')
         if name:
             print(name)
-
         img = cv2.imread(img_p)
         mask_img = cv2.imread(label_p, 0)
         pred_mask = self.predict(img)
         pred_mask_img = (pred_mask * 255).astype(np.uint8)
         pred_cnts = mask2contour(pred_mask_img)
         label_cnts = mask2contour(mask_img)
+        possible_right_cnts = self._overlap(mask_img, pred_mask_img)
 
         true_objects = len(label_cnts)
         pred_objects = len(pred_cnts)
         print("Number of true objects:", true_objects)
         print("Number of predicted objects:", pred_objects)
-        # Compute intersection between all objects
-        intersection = np.histogram2d(mask_img.flatten(), pred_mask_img.flatten(),
-        bins=(true_objects, pred_objects))[0]
-        # Compute areas (needed for finding the union between all objects)
-        area_true = np.histogram(mask_img, bins = true_objects)[0]
-        area_pred = np.histogram(pred_mask_img, bins = pred_objects)[0]
-        area_true = np.expand_dims(area_true, -1)
-        area_pred = np.expand_dims(area_pred, 0)
-        # Compute union
-        union = area_true + area_pred - intersection
-        # Exclude background from the analysis
-        intersection = intersection[1:,1:]
-        union = union[1:,1:]
-        union[union == 0] = 1e-9
-        # Compute the intersection over union
-        iou = intersection / union
 
-        # Loop over IoU thresholds
-        prec = []
-        print("Thresh\tTP\tFP\tFN\tPrec.")
-        for t in np.arange(0.5, 1.0, 0.05):
-            tp, fp, fn = self._precision_at(t, iou)
-            p = tp / (tp + fp + fn)
-            print("{:1.3f}\t{}\t{}\t{}\t{:1.3f}".format(t, tp, fp, fn, p))
-            prec.append(p)
-        print("AP\t-\t-\t-\t{:1.3f}".format(np.mean(prec)))
+        true_positive = len(possible_right_cnts)
+        false_positive = true_objects - true_positive
+        false_negative = pred_objects - true_positive
+        precision = true_positive / (true_positive + false_positive)
+        sensitivity = true_positive / (true_positive + false_negative)
+        print("true_positive false_positive false_negative Precision Sensitivity")
+        print(" ".join([str(item) for item in (true_positive, false_positive, 
+        false_negative, precision, sensitivity)]))
 
         sys.stdout.close()
 
     def metric_from_dir(self, img_dir_path, label_dir_path):
         for img_p, label_p, name in path_matcher(img_dir_path, label_dir_path):
             self.metric(img_p, label_p, name)
-            
+
 def mask2contour(mask_img, iterations=2):
     thresh = 255 - cv2.threshold(mask_img, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
     kernel = np.ones((5, 5),np.uint8)
