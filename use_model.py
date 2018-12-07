@@ -79,7 +79,6 @@ class Unet_predictor:
         false_negatives = Extra objects
         (PPV), Precision = Σ True positive / Σ Predicted condition positive
         Sensitivity, probability of detection = Σ True positive / Σ Condition positive"""
-        sys.stdout = open('log.txt', 'a')
         if name:
             print(name)
         img = cv2.imread(img_p)
@@ -104,11 +103,11 @@ class Unet_predictor:
         print(" ".join([str(item) for item in (true_positive, false_positive, 
         false_negative, precision, sensitivity)]))
 
-        sys.stdout.close()
-
-    def metric_from_dir(self, img_dir_path, label_dir_path):
+    def metric_from_dir(self, img_dir_path, label_dir_path, dst):
+        sys.stdout = open(os.path.join(dst, 'log.txt'), 'a')
         for img_p, label_p, name in path_matcher(img_dir_path, label_dir_path):
             self.metric(img_p, label_p, name)
+        sys.stdout.close()
 
 def mask2contour(mask_img, iterations=2):
     thresh = 255 - cv2.threshold(mask_img, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
@@ -133,4 +132,8 @@ if __name__ == "__main__":
     dst = sys.argv[3]
     actor = Unet_predictor(model_p)
     os.makedirs(dst, exist_ok=True)
-    actor.predict_from_dir(img_dir, dst)
+    try:
+        label_dir = sys.argv[4]
+        actor.metric_from_dir(img_dir, label_dir, dst)
+    except IndexError:
+        actor.predict_from_dir(img_dir, dst)
