@@ -6,7 +6,7 @@ import cv2
 import os
 import sys
 from tiles import tiling, tile_simulation
-from EOS_tools import path_list_creator, path_matcher
+from EOS_tools import path_list_creator, path_matcher, get_name
 
 class Unet_predictor:
 
@@ -57,9 +57,9 @@ class Unet_predictor:
             img = cv2.imread(img_p)
             pred_mask = self.predict(img)
             pred_mask_img = (pred_mask * 255).astype(np.uint8)
-            pred_cnts = mask2contour(pred_mask_img)
+            pred_cnts = mask2contour(pred_mask_img, iterations=2)
 
-            ID = os.path.basename(img_p).split('.')[0]
+            ID = get_name(img_p)
             self.result[ID] = len(pred_cnts)
 
             if visualize_dst:
@@ -67,11 +67,12 @@ class Unet_predictor:
                 cv2.imwrite(os.path.join(visualize_dst, ID+'.jpg'), img_out)
         self.show_result()
 
-    def _overlap(self, mask_img, pred_mask_img):
-        cover = mask_img / 2 + pred_mask_img / 2
-        cover = cover.astype(np.uint8)
-        cover_cnts = mask2contour(cover, iterations=1)
-        return len(cover_cnts)
+    def _overlap(self, label_cnts, pred_cnts, shape):
+        img = cv2.drawContours(np.zeros(shape, dtype=np.uint8), label_cnts, -1, 100, -1) 
+        mask = cv2.drawContours(np.zeros(shape, dtype=np.uint8), pred_cnts, -1, 100, -1)
+        cover = img + mask
+        cover_cnts = mask2contour(cover)
+        return cover_cnts
 
     def metric(self, img_p: str, label_p: str, name=None) -> None:
         """true_positives = Correct objects
@@ -85,9 +86,12 @@ class Unet_predictor:
         mask_img = cv2.imread(label_p, 0)
         pred_mask = self.predict(img)
         pred_mask_img = (pred_mask * 255).astype(np.uint8)
-        pred_cnts = mask2contour(pred_mask_img)
+        pred_cnts = mask2contour(pred_mask_img, iterations=2)
         label_cnts = mask2contour(mask_img)
-        possible_right_cnts = self._overlap(mask_img, pred_mask_img)
+        possible_right_cnts = self._overlap(label_cnts, pred_cnts, mask_img.shape)
+        if name:
+            img_out = mask_visualization(img, possible_right_cnts)
+            cv2.imwrite(os.path.join(dst, name+'.png'), img_out)
 
         true_objects = len(label_cnts)
         pred_objects = len(pred_cnts)
@@ -109,11 +113,11 @@ class Unet_predictor:
             self.metric(img_p, label_p, name)
         sys.stdout.close()
 
-def mask2contour(mask_img, iterations=2):
-    thresh = 255 - cv2.threshold(mask_img, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
-    kernel = np.ones((5, 5),np.uint8)
-    thresh = cv2.erode(thresh, kernel, iterations=iterations)
-    cnts = cv2.findContours(thresh, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)[-2]
+def mask2contour(mask_img, threshold=127, iterations=0):
+    # thresh = 255 - cv2.threshold(mask_img, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
+    thresh = 255 - cv2.threshold(mask_img, threshold, 255, cv2.THRESH_BINARY_INV)[1]
+    thresh = cv2.erode(thresh, np.ones((5, 5), np.uint8), iterations=iterations)
+    cnts = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[-2]
     return cnts
 
 def mask_visualization(img, cnts):

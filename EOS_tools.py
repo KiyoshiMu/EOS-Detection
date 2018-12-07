@@ -20,7 +20,7 @@ def point_detect(hsv):
     return points
 
 def get_name(path):
-    return os.path.basename(path).split('.')[0]
+    return os.path.splitext(os.path.basename(path))[0].replace('label', '')
 
 def path_matcher(dir_img, dir_label):
     img_path_list = path_list_creator(dir_img)

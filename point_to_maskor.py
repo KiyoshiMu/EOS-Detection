@@ -12,7 +12,7 @@ def watershed_labels(img):
     shifted = cv2.GaussianBlur(img, (7, 7), 0)
     gray = cv2.cvtColor(shifted, cv2.COLOR_BGR2GRAY)
     thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
-    thresh = cv2.erode(thresh, np.ones((7, 7),np.uint8), iterations=1)
+    thresh = cv2.erode(thresh, np.ones((7, 7),np.uint8), iterations=0)
     D = ndimage.distance_transform_edt(thresh)
     localMax = peak_local_max(D, indices=False, min_distance=5, labels=thresh)
     markers = ndimage.label(localMax, structure=np.ones((3, 3)))[0]
