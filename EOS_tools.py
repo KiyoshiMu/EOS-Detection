@@ -19,8 +19,15 @@ def point_detect(hsv):
     points = [middle(cnt) for cnt in cnts]
     return points
 
-def get_name(path):
-    return os.path.splitext(os.path.basename(path))[0].replace('label', '')
+def get_name(path, more_ornaments=None) -> str:
+    """more_ornaments is a list. Its default value is None"""
+    ornaments = ['_label', '_pred', '_fit']
+    if more_ornaments:
+        ornaments.extend(more_ornaments)
+    name = os.path.splitext(os.path.basename(path))[0]
+    for clear in ornaments:
+        name = name.replace(clear, '')
+    return name
 
 def path_matcher(dir_img, dir_label):
     img_path_list = path_list_creator(dir_img)

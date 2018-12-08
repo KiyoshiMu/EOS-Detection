@@ -37,34 +37,34 @@ class Unet_predictor:
         pred_mask = cv2.resize(raw_mask, img.shape[:2][::-1])
         return pred_mask
 
-    def show_result(self) -> None:
+    def show_result(self, write=False) -> None:
         if len(self.result) == 0:
             print('No record yet.')
             return
-        with open('record.txt', 'w+') as record:
-            line = '{}    {}'.format('ID', "EOS_Count")
-            record.write(line)
-            print(line)
-            for ID, count in self.result.items():
-                line = '{}    {}'.format(ID, count)
-                record.write(line)
-                print(line)
+        if write:
+            sys.out = open('record.txt', 'w+')
 
+        for ID, count in self.result.items():
+            line = '{}    {}'.format(ID, count)
+            print(line)
+
+        if write:
+            sys.out.close()
+        
     def predict_from_dir(self, dir_path, visualize_dst=None):
         self.result.clear()
         img_p_list = path_list_creator(dir_path)
         for img_p in img_p_list:
             img = cv2.imread(img_p)
             pred_mask = self.predict(img)
-            pred_mask_img = (pred_mask * 255).astype(np.uint8)
-            pred_cnts = mask2contour(pred_mask_img, iterations=2)
+            pred_cnts = self._pred_mask_to_cnts(pred_mask)
 
             ID = get_name(img_p)
             self.result[ID] = len(pred_cnts)
 
             if visualize_dst:
-                img_out = mask_visualization(img, pred_cnts)
-                cv2.imwrite(os.path.join(visualize_dst, ID+'.jpg'), img_out)
+                pred_out = mask_visualization(img, pred_cnts)
+                cv2.imwrite(os.path.join(visualize_dst, ID+'_pred.jpg'), pred_out)
         self.show_result()
 
     def _overlap(self, label_cnts, pred_cnts, shape):
@@ -74,38 +74,48 @@ class Unet_predictor:
         cover_cnts = mask2contour(cover)
         return cover_cnts
 
-    def metric(self, img_p: str, label_p: str, name=None) -> None:
+    def _pred_mask_to_cnts(self, pred_mask):
+        pred_mask_img = (pred_mask * 255).astype(np.uint8)
+        pred_cnts = mask2contour(pred_mask_img, iterations=2)
+        return pred_cnts
+
+    def metric(self, img_p: str, label_p: str, show=True, name=None) -> None:
         """true_positives = Correct objects
         false_positives = Missed objects
         false_negatives = Extra objects
         (PPV), Precision = Σ True positive / Σ Predicted condition positive
         Sensitivity, probability of detection = Σ True positive / Σ Condition positive"""
-        if name:
-            print(name)
+        if not name:
+            name = get_name(img_p)
+        print(name)
+        
         img = cv2.imread(img_p)
         mask_img = cv2.imread(label_p, 0)
         pred_mask = self.predict(img)
-        pred_mask_img = (pred_mask * 255).astype(np.uint8)
-        pred_cnts = mask2contour(pred_mask_img, iterations=2)
+        pred_cnts = self._pred_mask_to_cnts(pred_mask)
         label_cnts = mask2contour(mask_img)
         possible_right_cnts = self._overlap(label_cnts, pred_cnts, mask_img.shape)
-        if name:
-            img_out = mask_visualization(img, possible_right_cnts)
-            cv2.imwrite(os.path.join(dst, name+'.png'), img_out)
+        if show:
+            fit_out = mask_visualization(img, possible_right_cnts)
+            cv2.imwrite(os.path.join(dst, name+'_fit.jpg'), fit_out)
+            pred_out = mask_visualization(img, pred_cnts)
+            cv2.imwrite(os.path.join(dst, name+'_pred.jpg'), pred_out)
 
         true_objects = len(label_cnts)
         pred_objects = len(pred_cnts)
-        print("Number of true objects:", true_objects)
-        print("Number of predicted objects:", pred_objects)
-
         true_positive = len(possible_right_cnts)
         false_positive = true_objects - true_positive
         false_negative = pred_objects - true_positive
         precision = true_positive / (true_positive + false_positive)
         sensitivity = true_positive / (true_positive + false_negative)
-        print("true_positive false_positive false_negative Precision Sensitivity")
-        print(" ".join([str(item) for item in (true_positive, false_positive, 
-        false_negative, precision, sensitivity)]))
+
+        print_dict = {}
+        keys = "Number_of_true_objects, Number_of_predicted_objects, true_positive, \
+        false_positive, false_negative, Precision, Sensitivity"
+        values = [true_objects, pred_objects, true_positive, 
+        false_positive, false_negative, precision, sensitivity]
+        print_dict.update(dict(zip(keys.split(', '), values)))
+        print(print_dict)
 
     def metric_from_dir(self, img_dir_path, label_dir_path, dst):
         sys.stdout = open(os.path.join(dst, 'log.txt'), 'a')
@@ -120,14 +130,17 @@ def mask2contour(mask_img, threshold=127, iterations=0):
     cnts = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[-2]
     return cnts
 
-def mask_visualization(img, cnts):
+def mask_visualization(img, cnts, color='cyan'):
+    color_dict = {'cyan':(255, 255, 0), 'green':(0, 255, 0), 'black': (0, 0, 0)}
+    use_color = color_dict.get(color, d=(255, 255, 0))
+    expansion = 3
     for c in cnts:
 #         x,y,w,h = cv2.boundingRect(c)
 #         cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 3)
         (x, y), radius = cv2.minEnclosingCircle(c)
         center = (int(x), int(y))
-        radius = int(radius) + 3
-        cv2.circle(img,center,radius,(255, 255, 0), 2)
+        radius = int(radius) + expansion
+        cv2.circle(img,center, radius, use_color, 2)
     return img
 
 if __name__ == "__main__":
