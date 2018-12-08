@@ -29,6 +29,7 @@ def img_makeup(img, text, f_size=100):
     x = int((w - text_w) / 2)
     y = int((h- text_h) / 2)
     draw.text((x, y), text, font=fnt)
+    img = img.resize((int(w/2), int(h/2)))
     return img
 
 def make_gif(fp_dict, out_p):

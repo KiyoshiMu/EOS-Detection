@@ -7,6 +7,10 @@ import os
 import sys
 from tiles import tiling, tile_simulation
 from EOS_tools import path_list_creator, path_matcher, get_name
+import pandas as pd
+from bisect import bisect_left
+from scipy.stats import describe
+from math import pi, sqrt
 
 class Unet_predictor:
 
@@ -16,6 +20,9 @@ class Unet_predictor:
         self.size = (256, 256)
         self.path = model_p
         self.result = {}
+        self.record = {}
+        self.metric_keys = "Number_of_true_objects, Number_of_predicted_objects, true_positive, false_positive, false_negative, Precision, Sensitivity"
+        self.cell_size = []
 
     def __repr__(self):
         return self.model.summary()
@@ -74,20 +81,36 @@ class Unet_predictor:
         cover_cnts = mask2contour(cover)
         return cover_cnts
 
+    def _foolish_clean(self, shape, cnts, count=True):
+        canvas = np.zeros(shape, np.uint8)
+        for cnt in cnts:
+            area = cv2.contourArea(cnt)
+            # if area <= 100:
+            #     continue
+            if count:
+                self.cell_size.append(area)
+            draw_circle(canvas, cnt, 255, 0, -1, target=10)
+        return canvas
+
     def _pred_mask_to_cnts(self, pred_mask):
         pred_mask_img = (pred_mask * 255).astype(np.uint8)
-        pred_cnts = mask2contour(pred_mask_img, iterations=2)
+        raw_pred_cnts = mask2contour(pred_mask_img, iterations=2)
+        canvas = self._foolish_clean(pred_mask.shape, raw_pred_cnts)
+        pred_cnts = mask2contour(canvas)
+
         return pred_cnts
 
-    def metric(self, img_p: str, label_p: str, show=True, name=None) -> None:
+    def metric(self, img_p: str, label_p: str, from_dir=False, show=True, name=None) -> None:
         """true_positives = Correct objects
         false_positives = Missed objects
         false_negatives = Extra objects
         (PPV), Precision = Σ True positive / Σ Predicted condition positive
-        Sensitivity, probability of detection = Σ True positive / Σ Condition positive"""
+        Sensitivity, probability of detection = Σ True positive / Σ Condition positive
+        If it is not form dir, we show the outcome directly"""
         if not name:
             name = get_name(img_p)
-        print(name)
+        if not from_dir:
+            print(name)
         
         img = cv2.imread(img_p)
         mask_img = cv2.imread(label_p, 0)
@@ -109,39 +132,52 @@ class Unet_predictor:
         precision = true_positive / (true_positive + false_positive)
         sensitivity = true_positive / (true_positive + false_negative)
 
-        print_dict = {}
-        keys = "Number_of_true_objects, Number_of_predicted_objects, true_positive, \
-        false_positive, false_negative, Precision, Sensitivity"
         values = [true_objects, pred_objects, true_positive, 
         false_positive, false_negative, precision, sensitivity]
-        print_dict.update(dict(zip(keys.split(', '), values)))
-        print(print_dict)
+        self.record[name] = values
+        if not from_dir:
+            print_dict = {}
+            print_dict.update(dict(zip(self.metric_keys.split(', '), values)))
+            print(print_dict)
+
+    def _metric_summary(self):
+        if len(self.record) == 0:
+            print('No metric record')
+            return
+        df = pd.DataFrame.from_dict(self.record, orient='index', columns=self.metric_keys.split(', '))
+        return df
 
     def metric_from_dir(self, img_dir_path, label_dir_path, dst):
         sys.stdout = open(os.path.join(dst, 'log.txt'), 'a')
         for img_p, label_p, name in path_matcher(img_dir_path, label_dir_path):
-            self.metric(img_p, label_p, name)
+            self.metric(img_p, label_p, from_dir=True, name=name)
+        df = self._metric_summary()
+        print(df.describe())
+        print(describe(np.array(self.cell_size)))
         sys.stdout.close()
 
-def mask2contour(mask_img, threshold=127, iterations=0):
+def mask2contour(mask_img, threshold=128, iterations=0):
     # thresh = 255 - cv2.threshold(mask_img, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
     thresh = 255 - cv2.threshold(mask_img, threshold, 255, cv2.THRESH_BINARY_INV)[1]
     thresh = cv2.erode(thresh, np.ones((5, 5), np.uint8), iterations=iterations)
     cnts = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[-2]
     return cnts
 
-def mask_visualization(img, cnts, color='cyan'):
+def draw_circle(img, c, use_color, expansion=0, thickness=2, target=None):
+    (x, y), radius = cv2.minEnclosingCircle(c)
+    center = (int(x), int(y))
+    radius = target or int(radius) + expansion
+    cv2.circle(img, center, radius, use_color, thickness)
+
+def mask_visualization(img, cnts, color='cyan', expansion=0, target=14):
     color_dict = {'cyan':(255, 255, 0), 'green':(0, 255, 0), 'black': (0, 0, 0)}
-    use_color = color_dict.get(color, d=(255, 255, 0))
-    expansion = 3
+    use_color = color_dict.get(color, (255, 255, 0))
+    cur_img = img.copy()
     for c in cnts:
 #         x,y,w,h = cv2.boundingRect(c)
 #         cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 3)
-        (x, y), radius = cv2.minEnclosingCircle(c)
-        center = (int(x), int(y))
-        radius = int(radius) + expansion
-        cv2.circle(img,center, radius, use_color, 2)
-    return img
+        draw_circle(cur_img, c, use_color, expansion, target=target)
+    return cur_img
 
 if __name__ == "__main__":
     model_p = sys.argv[1]
