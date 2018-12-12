@@ -1,16 +1,16 @@
-from Unet import UNET
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import cv2
 import os
 import sys
-from tile_creator import tiling, tile_simulation
-from EOS_tools import path_list_creator, path_matcher, get_name
 import pandas as pd
 from bisect import bisect_left
 from scipy.stats import describe
 from math import pi, sqrt
+from Unet_box.Unet import UNET
+from Unet_box.tile_creator import tiling, tile_simulation
+from Unet_box.EOS_tools import path_list_creator, path_matcher, get_name
 
 class Unet_predictor:
 
@@ -58,20 +58,20 @@ class Unet_predictor:
         if write:
             sys.out.close()
         
-    def predict_from_dir(self, dir_path, visualize_dst=None):
+    def predict_from_dir(self, dir_path, visualize_dst=None, show_mask=True, target=15):
         self.result.clear()
         img_p_list = path_list_creator(dir_path)
         for img_p in img_p_list:
             img = cv2.imread(img_p)
-            pred_mask = self.predict(img)
-            pred_cnts = self._pred_mask_to_cnts(pred_mask)
-
+            pred_cnts, pred_mask_img = self._mask_creator(img)
             ID = get_name(img_p)
             self.result[ID] = len(pred_cnts)
 
             if visualize_dst:
-                pred_out = mask_visualization(img, pred_cnts)
+                pred_out = mask_visualization(img, pred_cnts, target=target)
                 cv2.imwrite(os.path.join(visualize_dst, ID+'_pred.jpg'), pred_out)
+                if show_mask:
+                    cv2.imwrite(os.path.join(visualize_dst, ID+'_mask.jpg'), pred_mask_img)
         self.show_result()
 
     def _overlap(self, label_cnts, pred_cnts, shape):
@@ -89,18 +89,23 @@ class Unet_predictor:
             #     continue
             if count:
                 self.cell_size.append(area)
-            draw_circle(canvas, cnt, 255, 0, -1, target=10)
+            draw_circle(canvas, cnt, 255, 0, -1, target=8)
         return canvas
 
-    def _pred_mask_to_cnts(self, pred_mask):
-        pred_mask_img = (pred_mask * 255).astype(np.uint8)
+    def _pred_mask_to_cnts(self, pred_mask_img):
         raw_pred_cnts = mask2contour(pred_mask_img, iterations=2)
-        canvas = self._foolish_clean(pred_mask.shape, raw_pred_cnts)
+        canvas = self._foolish_clean(pred_mask_img.shape, raw_pred_cnts)
         pred_cnts = mask2contour(canvas)
 
         return pred_cnts
 
-    def metric(self, img_p: str, label_p: str, from_dir=False, show=True, name=None) -> None:
+    def _mask_creator(self, img):
+        pred_mask = self.predict(img)
+        pred_mask_img = (pred_mask * 255).astype(np.uint8)
+        pred_cnts = self._pred_mask_to_cnts(pred_mask_img)
+        return pred_cnts, pred_mask_img
+
+    def metric(self, img_p: str, label_p: str, from_dir=False, show=True, name=None, show_mask=False, target=15) -> None:
         """true_positives = Correct objects
         false_positives = Missed objects
         false_negatives = Extra objects
@@ -114,15 +119,17 @@ class Unet_predictor:
         
         img = cv2.imread(img_p)
         mask_img = cv2.imread(label_p, 0)
-        pred_mask = self.predict(img)
-        pred_cnts = self._pred_mask_to_cnts(pred_mask)
+        pred_cnts, pred_mask_img = self._mask_creator(img)
         label_cnts = mask2contour(mask_img)
         possible_right_cnts = self._overlap(label_cnts, pred_cnts, mask_img.shape)
+
         if show:
-            fit_out = mask_visualization(img, possible_right_cnts)
+            fit_out = mask_visualization(img, possible_right_cnts, target=target)
             cv2.imwrite(os.path.join(dst, name+'_fit.jpg'), fit_out)
-            pred_out = mask_visualization(img, pred_cnts)
+            pred_out = mask_visualization(img, pred_cnts, target=target)
             cv2.imwrite(os.path.join(dst, name+'_pred.jpg'), pred_out)
+        if show_mask:
+            cv2.imwrite(os.path.join(dst, name+'_mask.jpg'), pred_mask_img)
 
         true_objects = len(label_cnts)
         pred_objects = len(pred_cnts)
@@ -169,7 +176,7 @@ def draw_circle(img, c, use_color, expansion=0, thickness=2, target=None):
     radius = target or int(radius) + expansion
     cv2.circle(img, center, radius, use_color, thickness)
 
-def mask_visualization(img, cnts, color='cyan', expansion=0, target=14):
+def mask_visualization(img, cnts, color='cyan', expansion=0, target=None):
     color_dict = {'cyan':(255, 255, 0), 'green':(0, 255, 0), 'black': (0, 0, 0)}
     use_color = color_dict.get(color, (255, 255, 0))
     cur_img = img.copy()
@@ -190,3 +197,5 @@ if __name__ == "__main__":
         actor.metric_from_dir(img_dir, label_dir, dst)
     except IndexError:
         actor.predict_from_dir(img_dir, dst)
+
+# 

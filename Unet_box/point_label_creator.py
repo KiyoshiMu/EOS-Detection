@@ -2,7 +2,7 @@ import cv2
 import sys
 import numpy as np
 import os
-from EOS_tools import point_detect, middle, path_matcher, inside
+from Unet_box.EOS_tools import point_detect, middle, path_matcher, inside
 
 def box_detect(hsv):
     lower_black = np.array([0,0,0])

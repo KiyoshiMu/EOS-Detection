@@ -1,9 +1,9 @@
-from Unet import UNET
 from keras.callbacks import Callback, EarlyStopping, ReduceLROnPlateau, ModelCheckpoint, TensorBoard
-from EOS_tools import data_creator
 from sklearn.model_selection import train_test_split
 import sys
 from os.path import join
+from Unet_box.EOS_tools import data_creator
+from Unet_box.Unet import UNET
 
 def model_train(X_train, Y_train, X_test, Y_test, model_name=None, model_p=None):
     if not model_name:

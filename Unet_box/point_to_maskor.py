@@ -5,7 +5,7 @@ from skimage.feature import peak_local_max
 from skimage.morphology import watershed
 from scipy import ndimage
 import numpy as np
-from EOS_tools import point_detect, inside, middle, path_matcher
+from Unet_box.EOS_tools import point_detect, inside, middle, path_matcher
 
 def watershed_labels(img):
     """the lines is adapted from https://www.pyimagesearch.com/2015/11/02/watershed-opencv"""
