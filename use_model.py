@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import cv2
 import os
 import sys
-from tiles import tiling, tile_simulation
+from tile_creator import tiling, tile_simulation
 from EOS_tools import path_list_creator, path_matcher, get_name
 import pandas as pd
 from bisect import bisect_left
