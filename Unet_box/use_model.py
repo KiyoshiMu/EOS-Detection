@@ -58,20 +58,24 @@ class Unet_predictor:
         if write:
             sys.out.close()
         
+    def predict_from_img(self, img, ID, visualize_dst=None, show_mask=True, target=15):
+        pred_cnts, pred_mask_img = self._mask_creator(img)
+        self.result[ID] = len(pred_cnts)
+
+        if visualize_dst:
+            pred_out = mask_visualization(img, pred_cnts, target=target)
+            cv2.imwrite(os.path.join(visualize_dst, ID+'_pred.jpg'), pred_out)
+            if show_mask:
+                cv2.imwrite(os.path.join(visualize_dst, ID+'_mask.jpg'), pred_mask_img)
+
     def predict_from_dir(self, dir_path, visualize_dst=None, show_mask=True, target=15):
         self.result.clear()
         img_p_list = path_list_creator(dir_path)
         for img_p in img_p_list:
             img = cv2.imread(img_p)
-            pred_cnts, pred_mask_img = self._mask_creator(img)
             ID = get_name(img_p)
-            self.result[ID] = len(pred_cnts)
-
-            if visualize_dst:
-                pred_out = mask_visualization(img, pred_cnts, target=target)
-                cv2.imwrite(os.path.join(visualize_dst, ID+'_pred.jpg'), pred_out)
-                if show_mask:
-                    cv2.imwrite(os.path.join(visualize_dst, ID+'_mask.jpg'), pred_mask_img)
+            self.predict_from_img(img, ID, visualize_dst=visualize_dst,
+            show_mask=show_mask, target=target)
         self.show_result()
 
     def _overlap(self, label_cnts, pred_cnts, shape):
