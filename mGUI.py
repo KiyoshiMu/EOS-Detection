@@ -35,6 +35,7 @@ class PictureWindow(Canvas):
         self.type_to_suffix = {'detection':'_pred', 'mask':'_mask'}
         self.path_list = creat_path_list()
         self.cur = 0
+        self.cur_type = ['origin']
 
         self.cache = {}
         self.length = len(self.path_list)
@@ -83,37 +84,36 @@ class PictureWindow(Canvas):
         self._button_disable()
         if update_predicted == True:
             print('prediction completed')
-            self._show_something(cache, 'detection', trans='origin')
+            self._show_something(cache, 'detection', next_img_type='origin')
         else:
             if isinstance(cache[1], np.ndarray):
-                self._show_something(cache, 'origin', trans='detection')
-
+                self._show_something(cache, 'origin', next_img_type='detection')
+            else:
+                self._show_something(cache, 'origin')
+                return
             if isinstance(cache[2], np.ndarray):
                 mask_type = 'mask'
                 self._button_enable(f"show {mask_type}", 
-                partial(self._show_something, cache, mask_type, trans='origin'), 
+                partial(self._show_something, cache, mask_type, next_img_type=self.cur_type), 
                 button_type=mask_type)
-            else:
-                self._show_something(cache, 'origin')
 
-    def _show_something(self, cache, img_type:str, trans=None, dis_button=None):
+    def _show_something(self, cache, img_type:str, next_img_type=None, dis_button=None):
         """self.type_to_idx = {'origin':0, 'detection':1, 'mask':2}"""
+        self.cur_type = img_type
         idx = self.type_to_idx[img_type]
         print(f'show {img_type}')
         self.show_image(cache[idx])
         if dis_button:
             self._button_disable(button_type=dis_button)
-
-        if img_type == 'mask':
-            self._button_enable(f"show {trans}", 
-            partial(self._show_something, cache, trans, trans=img_type, dis_button=img_type), 
-            button_type=img_type)
         else:
-            # self._button_disable(button_type='origin')
-            if trans:
-                self._button_enable(f"show {trans}", 
-                partial(self._show_something, cache, trans, trans=img_type, dis_button=trans), 
-                button_type=trans)
+            self._button_disable(button_type=img_type)
+
+        if next_img_type:
+            button_type = img_type if img_type == 'mask' else next_img_type
+            self._button_enable(f"show {next_img_type}", 
+            partial(self._show_something, cache, next_img_type, next_img_type=self.cur_type, 
+            dis_button=button_type), 
+            button_type=button_type)
 
     def _button_disable(self, button_type=None):
         iters = self.type_to_button.keys() if not button_type else [button_type]
