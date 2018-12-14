@@ -9,6 +9,8 @@ from Unet_box.EOS_tools import path_list_creator, get_name
 from os.path import join, dirname
 import os
 import cv2
+import numpy as np
+import compileall
 from functools import partial
 from Unet_box.use_model import Unet_predictor
 
@@ -31,7 +33,7 @@ class PictureWindow(Canvas):
 
         self.path_list = creat_path_list()
         self.cur = 0
-        self.pred_button = None
+        self.center_button = None
         self.cache = {}
         self.length = len(self.path_list)
         self.loc = self.path_list[self.cur]
@@ -41,52 +43,72 @@ class PictureWindow(Canvas):
         self.width = self.winfo_screenwidth()
         self.all_function_trigger()
 
-        self.img_switcher(self.loc)
+        self.img_switcher()
 
     def read_img(self, path, update_predicted=False):
+        print(path)
         if path in self.cache and not update_predicted:
             return self.cache[path]
   
-        self.cache[path] = [cv2.imread(path), None]
-        if update_predicted:
-            pred_path = join(dst, get_name(path)+'_pred.jpg')
-            self.cache[path][1] = cv2.imread(pred_path)
-        # except:
-        #     print('Not yet predicted')
+        self.cache[path] = [cv2.imread(path), False, None]
+        pred_path = join(dst, get_name(path)+'_pred.jpg')
+        if os.path.isfile(pred_path):
+            self.cache[path][2] = cv2.imread(pred_path)
+            print('find pred')
+            self.cache[path][1] = True
+        else:
+            print('not find pred')
 
         return self.cache[path]
 
     def show_image(self, raw_img):
         w, h = self.width, self.height
-        resize_img = cv2.resize(raw_img, (w, h))
+        resize_img = cv2.resize(raw_img, (w, h))[...,::-1]
         img = ImageTk.PhotoImage(Image.fromarray(resize_img))
         self.delete(self.find_withtag("img"))
         self.allready = self.create_image(w/2, h/2, image=img, anchor='center', tag="img")
         self.image = img
-        self.master.title("Image Viewer ({})".format(self.ID))
+        self.master.title("EOS ({})".format(self.ID))
         
-    def img_switcher(self, path, update_predicted=False):
-        cache = self.read_img(path, update_predicted=update_predicted)
-        if update_predicted:
-            pred_img = cache[1]
-            self.show_image(pred_img)        
+    def img_switcher(self, update_predicted=False):
+        cache = self.read_img(self.loc, update_predicted=update_predicted)
+        if update_predicted == True:
+            print('prediction completed')
+            self._show_pred(cache)
         else:
-            raw_img = cache[0]
-            self.show_image(raw_img)
-            if cache[1]:
-                self._button_enable("show predicted", partial(self.show_image, cache[1]))
-            elif self.pred_button:
-                self._button_disable()
+            self._show_ori(cache)
 
-    def _button_disable(self):
+    def _show_pred(self, cache):
+        pred_img = cache[2]
+        print('show pred')
+        self.show_image(pred_img)
+        self._button_disable()
+        self._button_enable("show original", partial(self._show_ori, cache))
+
+    def _show_ori(self, cache):
+        ori_img = cache[0]
+        print('show ori')
+        self.show_image(ori_img)
+        self._button_disable()
+        if isinstance(cache[2], np.ndarray):
+            print('p button create')
+            self._button_enable("show predicted", partial(self._show_pred, cache))
+
+    def _button_disable(self, link=None):
+        if not link:
+            link = self.center_button
         try:
-            self.pred_button.destroy()
+            link.destroy()
         except:
-            print('button disable')
+            print('button is disabled')
         
-    def _button_enable(self, text, func):
-        self.pred_button = Button(self, text=text, command=func)
-        self.pred_button.place(relx=0.5, rely=0.5, anchor='center')
+    def _button_enable(self, text, func, link=None):
+        if not link:
+            self.center_button = Button(self, text=text, command=func)
+            self.center_button.place(relx=0.5, rely=0.5, anchor='center')
+        else:
+            link = Button(self, text=text, command=func)
+            link.place(relx=0.5, rely=0.5, anchor='center')
 
     def _loc_updator(self):
         if self.cur >= self.length:
@@ -99,12 +121,12 @@ class PictureWindow(Canvas):
     def previous_image(self):
         self.cur -= 1
         self._loc_updator()
-        self.img_switcher(self.loc)
+        self.img_switcher()
 
     def next_image(self):
         self.cur += 1
         self._loc_updator()
-        self.img_switcher(self.loc)
+        self.img_switcher()
         
     def all_function_trigger(self):
         self.create_buttons()
@@ -118,7 +140,9 @@ class PictureWindow(Canvas):
     def img_predict(self):
         raw_img = self.cache[self.loc][0]
         actor.predict_from_img(raw_img, self.ID, dst)
-        self.img_switcher(self.loc, update_predicted=True)
+        self.img_switcher(update_predicted=True)
+
+
 # def link():
 #     os.makedirs(dst, exist_ok=True)
 #     actor.predict_from_dir(path, dst)
@@ -128,7 +152,7 @@ def main():
     global actor
     actor = Unet_predictor('./Unet_box/not_fs_second.h5')
     # Creating Window
-    root = Tk(className=" Image Viewer")
+    root = Tk(className="EOS Predictor")
     PictureWindow(root).pack(expand="yes",fill="both")
     # root.resizable(width=0,height=0)
     root.mainloop()
