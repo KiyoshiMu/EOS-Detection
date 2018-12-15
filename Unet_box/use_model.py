@@ -190,19 +190,19 @@ def draw_circle(img, c, use_color, expansion=0, thickness=2, target=None):
 def draw_colorful(img, cnts):
     label = np.zeros((img.shape[:2]))
     for number, c in enumerate(cnts, start=1):
-        draw_origin(label, c, number, thickness=-1)
-    colorful_img = label2rgb(label, image=img)
+        draw_origin(label, [c], number, thickness=-1)
+    colorful_img = np.array(label2rgb(label, image=img)*255, np.uint8)
     return colorful_img
 
-def draw_origin(img, c, use_color, thickness=2):
-    cv2.drawContours(img, [c], -1, use_color, thickness)
+def draw_origin(img, cnts, use_color, thickness=2):
+    cv2.drawContours(img, cnts, -1, use_color, thickness)
 
 def mask_visualization(img, cnts, method='circle', **kargs):
-    cur_img = img.copy()
     if method == 'colorful':
-        draw_colorful(cur_img, cnts)
+        cur_img = draw_colorful(img, cnts)
 
     else:
+        cur_img = img.copy()
         color=kargs.get('color', 'cyan')
         color_dict = {'cyan':(255, 255, 0), 'green':(0, 255, 0), 'black': (0, 0, 0)}
         use_color = color_dict.get(color, (255, 255, 0))
