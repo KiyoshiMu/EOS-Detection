@@ -11,6 +11,8 @@ from math import pi, sqrt
 from Unet_box.Unet import UNET
 from Unet_box.tile_creator import tiling, tile_simulation
 from Unet_box.EOS_tools import path_list_creator, path_matcher, get_name
+from Unet_box.mask_to_cnts import mask_to_cnts_watershed
+from skimage.color import label2rgb
 
 class Unet_predictor:
 
@@ -20,7 +22,7 @@ class Unet_predictor:
         self.size = (256, 256)
         self.path = model_p
         self.result = {}
-        self.record = {}
+        self.metric_record = {}
         self.metric_keys = "Number_of_true_objects, Number_of_predicted_objects, true_positive, false_positive, false_negative, Precision, Sensitivity"
         self.cell_size = []
 
@@ -51,8 +53,8 @@ class Unet_predictor:
         if write:
             sys.out = open('record.txt', 'w+')
 
-        for ID, count in self.result.items():
-            line = '{}    {}'.format(ID, count)
+        for ID, areas in self.result.items():
+            line = f'{ID}    {len(areas)}'
             print(line)
 
         if write:
@@ -60,20 +62,22 @@ class Unet_predictor:
         
     def predict_from_img(self, img, ID, visualize_dst=None, show_mask=True, target=15):
         pred_cnts, pred_mask_img = self._mask_creator(img)
-        self.result[ID] = len(pred_cnts)
+        self.result[ID] = [cv2.contourArea(c) for c in pred_cnts]
 
         if visualize_dst:
-            pred_out = mask_visualization(img, pred_cnts, target=target)
+            pred_out = mask_visualization(img, pred_cnts, method='colorful', target=target)
             cv2.imwrite(os.path.join(visualize_dst, ID+'_pred.jpg'), pred_out)
             if show_mask:
                 cv2.imwrite(os.path.join(visualize_dst, ID+'_mask.jpg'), pred_mask_img)
 
     def predict_from_dir(self, dir_path, visualize_dst=None, show_mask=True, target=15):
-        self.result.clear()
+        # self.result.clear()
         img_p_list = path_list_creator(dir_path)
         for img_p in img_p_list:
             img = cv2.imread(img_p)
             ID = get_name(img_p)
+            if ID in self.result:
+                continue
             self.predict_from_img(img, ID, visualize_dst=visualize_dst,
             show_mask=show_mask, target=target)
         self.show_result()
@@ -89,17 +93,20 @@ class Unet_predictor:
         canvas = np.zeros(shape, np.uint8)
         for cnt in cnts:
             area = cv2.contourArea(cnt)
-            # if area <= 100:
-            #     continue
             if count:
                 self.cell_size.append(area)
             draw_circle(canvas, cnt, 255, 0, -1, target=8)
         return canvas
 
-    def _pred_mask_to_cnts(self, pred_mask_img):
+    def _pred_mask_to_cnts_old(self, pred_mask_img):
         raw_pred_cnts = mask2contour(pred_mask_img, iterations=2)
         canvas = self._foolish_clean(pred_mask_img.shape, raw_pred_cnts)
         pred_cnts = mask2contour(canvas)
+
+        return pred_cnts
+
+    def _pred_mask_to_cnts(self, pred_mask_img):
+        pred_cnts = mask_to_cnts_watershed(pred_mask_img)
 
         return pred_cnts
 
@@ -145,17 +152,17 @@ class Unet_predictor:
 
         values = [true_objects, pred_objects, true_positive, 
         false_positive, false_negative, precision, sensitivity]
-        self.record[name] = values
+        self.metric_record[name] = values
         if not from_dir:
             print_dict = {}
             print_dict.update(dict(zip(self.metric_keys.split(', '), values)))
             print(print_dict)
 
     def _metric_summary(self):
-        if len(self.record) == 0:
+        if len(self.metric_record) == 0:
             print('No metric record')
             return
-        df = pd.DataFrame.from_dict(self.record, orient='index', columns=self.metric_keys.split(', '))
+        df = pd.DataFrame.from_dict(self.metric_record, orient='index', columns=self.metric_keys.split(', '))
         return df
 
     def metric_from_dir(self, img_dir_path, label_dir_path, dst):
@@ -180,14 +187,33 @@ def draw_circle(img, c, use_color, expansion=0, thickness=2, target=None):
     radius = target or int(radius) + expansion
     cv2.circle(img, center, radius, use_color, thickness)
 
-def mask_visualization(img, cnts, color='cyan', expansion=0, target=None):
-    color_dict = {'cyan':(255, 255, 0), 'green':(0, 255, 0), 'black': (0, 0, 0)}
-    use_color = color_dict.get(color, (255, 255, 0))
+def draw_colorful(img, cnts):
+    label = np.zeros((img.shape[:2]))
+    for number, c in enumerate(cnts, start=1):
+        draw_origin(label, c, number, thickness=-1)
+    colorful_img = label2rgb(label, image=img)
+    return colorful_img
+
+def draw_origin(img, c, use_color, thickness=2):
+    cv2.drawContours(img, [c], -1, use_color, thickness)
+
+def mask_visualization(img, cnts, method='circle', **kargs):
     cur_img = img.copy()
-    for c in cnts:
-#         x,y,w,h = cv2.boundingRect(c)
-#         cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 3)
-        draw_circle(cur_img, c, use_color, expansion, target=target)
+    if method == 'colorful':
+        draw_colorful(cur_img, cnts)
+
+    else:
+        color=kargs.get('color', 'cyan')
+        color_dict = {'cyan':(255, 255, 0), 'green':(0, 255, 0), 'black': (0, 0, 0)}
+        use_color = color_dict.get(color, (255, 255, 0))
+        if method == 'circle':
+            expansion=kargs.get('expansion', 0)
+            target=kargs.get('target', None)
+            for c in cnts:
+                draw_circle(cur_img, c, use_color, expansion, target=target)
+        else:
+            draw_origin(cur_img, c, use_color)
+            
     return cur_img
 
 if __name__ == "__main__":
@@ -201,5 +227,3 @@ if __name__ == "__main__":
         actor.metric_from_dir(img_dir, label_dir, dst)
     except IndexError:
         actor.predict_from_dir(img_dir, dst)
-
-# 

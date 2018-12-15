@@ -87,6 +87,8 @@ class PictureWindow(Canvas):
             print('prediction completed')
             self._show_something(cache, 'detection')
             self._button_update(cache, 'origin')
+            self._button_update(cache, 'detection')
+            self._button_update(cache, 'mask')
         else:
             self._show_something(cache, 'origin')
             if isinstance(cache[1], np.ndarray):
@@ -159,7 +161,6 @@ class PictureWindow(Canvas):
         raw_img = self.cache[self.loc][0]
         actor.predict_from_img(raw_img, self.ID, dst)
         self.img_switcher(update_predicted=True)
-
 
 # def link():
 #     os.makedirs(dst, exist_ok=True)
