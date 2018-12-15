@@ -65,14 +65,15 @@ class Unet_predictor:
         textsize = cv2.getTextSize(text, font, 11, 2)[0]
         textX = int((img.shape[1] - textsize[0]) / 2)
         textY = int((img.shape[0] + textsize[1]) / 4 * 3)
-        cv2.putText(img, text, (textX, textY), font, 11, (255,255,255), 2, cv2.LINE_AA)
+        cv2.putText(img, text, (textX, textY), font, 11, 0, 2, cv2.LINE_AA)
 
-    def predict_from_img(self, img, ID, visualize_dst=None, show_mask=True, target=15, mark_num=False):
+    def predict_from_img(self, img, ID, visualize_dst=None, show_mask=True, 
+    method='circle', target=15, mark_num=False):
         pred_cnts, pred_mask_img = self._mask_creator(img)
         self.result[ID] = [cv2.contourArea(c) for c in pred_cnts]
 
         if visualize_dst:
-            pred_out = mask_visualization(img, pred_cnts, method='colorful', target=target)
+            pred_out = mask_visualization(img, pred_cnts, method=method, target=target)
             if mark_num:
                 self._mark_text(pred_out, f'{len(self.result[ID])}')
             cv2.imwrite(os.path.join(visualize_dst, ID+'_pred.jpg'), pred_out)
@@ -115,8 +116,8 @@ class Unet_predictor:
         return pred_cnts
 
     def _pred_mask_to_cnts(self, pred_mask_img):
-        pred_cnts = mask_to_cnts_watershed(pred_mask_img)
-        # pred_cnts = mask_to_cnts_region(pred_mask_img)
+        # pred_cnts = mask_to_cnts_watershed(pred_mask_img)
+        pred_cnts = mask_to_cnts_region(pred_mask_img)
         return pred_cnts
 
     def _mask_creator(self, img):
@@ -221,7 +222,7 @@ def mask_visualization(img, cnts, method='circle', **kargs):
             for c in cnts:
                 draw_circle(cur_img, c, use_color, expansion, target=target)
         else:
-            draw_origin(cur_img, c, use_color)
+            draw_origin(cur_img, cnts, use_color)
             
     return cur_img
 
