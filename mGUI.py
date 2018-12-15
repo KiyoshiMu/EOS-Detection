@@ -159,7 +159,7 @@ class PictureWindow(Canvas):
         
     def img_predict(self):
         raw_img = self.cache[self.loc][0]
-        actor.predict_from_img(raw_img, self.ID, dst)
+        actor.predict_from_img(raw_img, self.ID, visualize_dst=dst, mark_num=True)
         self.img_switcher(update_predicted=True)
 
 # def link():

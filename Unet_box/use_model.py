@@ -11,7 +11,7 @@ from math import pi, sqrt
 from Unet_box.Unet import UNET
 from Unet_box.tile_creator import tiling, tile_simulation
 from Unet_box.EOS_tools import path_list_creator, path_matcher, get_name
-from Unet_box.mask_to_cnts import mask_to_cnts_watershed
+from Unet_box.mask_to_cnts import mask_to_cnts_watershed, mask_to_cnts_region
 from skimage.color import label2rgb
 
 class Unet_predictor:
@@ -59,13 +59,22 @@ class Unet_predictor:
 
         if write:
             sys.out.close()
-        
-    def predict_from_img(self, img, ID, visualize_dst=None, show_mask=True, target=15):
+
+    def _mark_text(self, img, text:str) -> None:
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        textsize = cv2.getTextSize(text, font, 11, 2)[0]
+        textX = int((img.shape[1] - textsize[0]) / 2)
+        textY = int((img.shape[0] + textsize[1]) / 4 * 3)
+        cv2.putText(img, text, (textX, textY), font, 11, (255,255,255), 2, cv2.LINE_AA)
+
+    def predict_from_img(self, img, ID, visualize_dst=None, show_mask=True, target=15, mark_num=False):
         pred_cnts, pred_mask_img = self._mask_creator(img)
         self.result[ID] = [cv2.contourArea(c) for c in pred_cnts]
 
         if visualize_dst:
             pred_out = mask_visualization(img, pred_cnts, method='colorful', target=target)
+            if mark_num:
+                self._mark_text(pred_out, f'{len(self.result[ID])}')
             cv2.imwrite(os.path.join(visualize_dst, ID+'_pred.jpg'), pred_out)
             if show_mask:
                 cv2.imwrite(os.path.join(visualize_dst, ID+'_mask.jpg'), pred_mask_img)
@@ -107,7 +116,7 @@ class Unet_predictor:
 
     def _pred_mask_to_cnts(self, pred_mask_img):
         pred_cnts = mask_to_cnts_watershed(pred_mask_img)
-
+        # pred_cnts = mask_to_cnts_region(pred_mask_img)
         return pred_cnts
 
     def _mask_creator(self, img):
