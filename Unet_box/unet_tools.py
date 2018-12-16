@@ -160,10 +160,12 @@ def show_result(info:dict, columns:list, write:bool=True,
     if write:
         df = pd.DataFrame.from_dict(info, orient='index', 
         columns=columns)
+        now = datetime.now()
+        time = now.strftime('%m_%d_%H:%M')
         if title:
-            stamp = f'Result_{title}_{str(datetime.now())}.xlsx'
+            stamp = f'Result_{title}_{time}.xlsx'
         else:
-            stamp = f'Result_{str(datetime.now())}.xlsx'
+            stamp = f'Result_{time}.xlsx'
         if not dst:
             dst = '.'
         df.to_excel(os.path.join(dst, stamp))

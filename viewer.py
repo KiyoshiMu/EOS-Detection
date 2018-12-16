@@ -1,7 +1,6 @@
 # the show_image function and the framework are from
 # Suraj Singh Admin S.S.B Group surajsinghbisht054@gmail.com http://bitforestinfo.blogspot.in/
 # Thanks!
-
 from tkinter import Canvas, Tk, Button, filedialog, Label
 from PIL import Image, ImageTk
 from copy import copy
@@ -10,22 +9,9 @@ from os.path import join, dirname
 import os
 import cv2
 import numpy as np
-import compileall
 from functools import partial
 from Unet_box.use_model import Unet_predictor
 from collections import deque
-
-def ask_path():
-    global dst
-    path = filedialog.askdirectory()
-    dst = join(dirname(path), 'temp')
-    os.makedirs(dst, exist_ok=True)
-    return path
-
-def creat_path_list():
-    path = ask_path()
-    path_list = path_list_creator(path)
-    return path_list
 
 # Creating Canvas Widget
 class PictureWindow(Canvas):
@@ -34,19 +20,25 @@ class PictureWindow(Canvas):
 
         self.type_to_idx = {'origin':0, 'detection':1, 'mask':2}
         self.type_to_suffix = {'detection':'_pred', 'mask':'_mask'}
-        self.path_list = creat_path_list()
-        self.cur = 0
-        self.cur_type = deque(maxlen=2)
-
+        # self.cur_type = deque(maxlen=2)
+        self._temp_init()
         self.cache = {}
-        self.length = len(self.path_list)
-        self.loc = self.path_list[self.cur]
-        self.ID = get_name(self.loc)
-
+        
         self.height = self.winfo_screenheight()
         self.width = self.winfo_screenwidth()
         self.all_function_trigger()
         self.img_switcher()
+
+    def _temp_init(self):
+        img_dir = filedialog.askdirectory(title='Select the directory where your slides are in ...', 
+        mustexist=True)
+        self.dst = join(dirname(img_dir), 'temp')
+        os.makedirs(self.dst, exist_ok=True)
+        self.path_list = path_list_creator(img_dir)
+        self.cur = 0
+        self.length = len(self.path_list)
+        self.loc = self.path_list[self.cur]
+        self.ID = get_name(self.loc)
 
     def read_img(self, path, update_predicted=False):
         print(path)
@@ -63,7 +55,7 @@ class PictureWindow(Canvas):
         return self.cache[path]
 
     def _search(self, path, img_type:str):
-        img_path = join(dst, f'{get_name(path)}{self.type_to_suffix[img_type]}.jpg')
+        img_path = join(self.dst, f'{get_name(path)}{self.type_to_suffix[img_type]}.jpg')
         if os.path.isfile(img_path):
             idx = self.type_to_idx[img_type]
             self.cache[path][idx] = cv2.imread(img_path)
@@ -111,7 +103,7 @@ class PictureWindow(Canvas):
 
     def _show_something(self, cache, img_type:str):
         """self.type_to_idx = {'origin':0, 'detection':1, 'mask':2}"""
-        self.cur_type.append(img_type)
+        # self.cur_type.append(img_type)
         idx = self.type_to_idx[img_type]
         print(f'show {img_type}')
         self.show_image(cache[idx])
@@ -159,13 +151,8 @@ class PictureWindow(Canvas):
         
     def img_predict(self):
         raw_img = self.cache[self.loc][0]
-        actor.predict_from_img(raw_img, self.ID, visualize_dst=dst, mark_num=True)
+        actor.predict_from_img(raw_img, self.ID, visualize_dst=self.dst, mark_num=True)
         self.img_switcher(update_predicted=True)
-
-# def link():
-#     os.makedirs(dst, exist_ok=True)
-#     actor.predict_from_dir(path, dst)
-# Main Function
 
 def main():
     global actor

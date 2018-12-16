@@ -56,9 +56,8 @@ class Unet_predictor:
             if show_mask:
                 cv2.imwrite(os.path.join(visualize_dst, ID+'_mask.jpg'), pred_mask_img)
 
-    def predict_from_dir(self, dir_path, visualize_dst=None, show_mask=True, target=15):
+    def predict_from_imgs(self, img_p_list, result_dst, visualize_dst=None, show_mask=False, target=15):
         # self.result.clear()
-        img_p_list = path_list_creator(dir_path)
         for img_p in img_p_list:
             img = cv2.imread(img_p)
             ID = get_name(img_p)
@@ -66,7 +65,7 @@ class Unet_predictor:
                 continue
             self.predict_from_img(img, ID, visualize_dst=visualize_dst,
             show_mask=show_mask, target=target)
-        show_result(self.result, ['ID', 'Counts'], title='Count', dst=visualize_dst)
+        show_result(self.result, ['Counts'], title='Count', dst=result_dst)
 
     def _mask_creator(self, img):
         pred_mask = self.predict(img)
@@ -123,4 +122,5 @@ if __name__ == "__main__":
         label_dir = sys.argv[4]
         actor.metric_from_dir(img_dir, label_dir, dst)
     except IndexError:
-        actor.predict_from_dir(img_dir, dst)
+        img_p_list = path_list_creator(img_dir)
+        actor.predict_from_imgs(img_p_list, dst)
