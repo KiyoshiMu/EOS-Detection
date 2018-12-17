@@ -19,11 +19,11 @@ Cell_refine.py read the special labels the CNN and we created before. Then, the 
 
 However, this method will come to its limitation. A cutting-edge technology is needed.
 
-## 2. Unet
+### 2. Unet
 
-###TODO
+TODO
 
-## 3. Usage
+### 3. Training
 
 1. point_label_creator
 
@@ -44,4 +44,5 @@ The information in H&E slides is important, so we decide not to limit it at the 
 4. Unet_trainor
 
 
-5. use_model
+
+## Usage

@@ -14,8 +14,8 @@ from datetime import datetime
 
 def segmentations_filters(shape, labels):
     canvas = np.zeros(shape, np.uint8)
-    ranks_for_big = [800, 1000, 1200, 1400]
-    rank_for_small = [100, 250, 400, 550]
+    ranks_for_big = [750, 900, 1050, 1200, 1350]
+    rank_for_small = [200, 400]
     for label in np.unique(labels):
         if label == 0:
             continue
@@ -48,7 +48,7 @@ def mask_to_cnts_region(mask_img):
     elevation_map = sobel(mask_img)
     markers = np.zeros_like(mask_img)
     markers[mask_img < 25] = 1
-    markers[mask_img > 127] = 2
+    markers[mask_img > 153] = 2
 
     segmentation = watershed(elevation_map, markers)
     segmentation = ndi.binary_fill_holes(segmentation - 1)
@@ -162,7 +162,7 @@ def show_result(info:dict, columns:list, write:bool=True,
         df = pd.DataFrame.from_dict(info, orient='index', 
         columns=columns)
         now = datetime.now()
-        time = now.strftime('%m_%d_%H:%M')
+        time = now.strftime('%m-%d_%H-%M')
         if title:
             stamp = f'Result_{title}_{time}.xlsx'
         else:

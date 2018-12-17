@@ -15,9 +15,9 @@ from collections import deque
 
 # Creating Canvas Widget
 class PictureWindow(Canvas):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, actor=None, **kwargs):
         Canvas.__init__(self, *args, **kwargs)
-        self.actor = kwargs.get('actor')
+        self.actor = actor
         assert self.actor is not None, 'No Modle Is Loaded!'
         self.type_to_idx = {'origin':0, 'detection':1, 'mask':2}
         self.type_to_suffix = {'detection':'_pred', 'mask':'_mask'}

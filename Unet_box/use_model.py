@@ -44,7 +44,7 @@ class Unet_predictor:
         return pred_mask
 
     def predict_from_img(self, img, ID, visualize_dst=None, show_mask=True, 
-    method='circle', target=15, mark_num=False):
+    method='circle', target=15, mark_num=False, assistance=False):
         pred_cnts, pred_mask_img = self._mask_creator(img)
         # self.result[ID] = [cv2.contourArea(c) for c in pred_cnts]
         self.result[ID] = len(pred_cnts)
@@ -53,10 +53,14 @@ class Unet_predictor:
             if mark_num:
                 mark_text(pred_out, f'{self.result[ID]}')
             cv2.imwrite(os.path.join(visualize_dst, ID+'_pred.jpg'), pred_out)
+            if assistance:
+                assist = mask_visualization(img, pred_cnts, method='circle', target=5, color='green', thickness=-1)
+                cv2.imwrite(os.path.join(visualize_dst, ID+'_help.jpg'), assist)
             if show_mask:
                 cv2.imwrite(os.path.join(visualize_dst, ID+'_mask.jpg'), pred_mask_img)
 
-    def predict_from_imgs(self, img_p_list, result_dst, visualize_dst=None, show_mask=False, target=15):
+    def predict_from_imgs(self, img_p_list, result_dst, visualize_dst=None, show_mask=False, 
+    target=15, assistance=False):
         # self.result.clear()
         for img_p in img_p_list:
             img = cv2.imread(img_p)
@@ -64,7 +68,7 @@ class Unet_predictor:
             if ID in self.result:
                 continue
             self.predict_from_img(img, ID, visualize_dst=visualize_dst,
-            show_mask=show_mask, target=target)
+            show_mask=show_mask, target=target, assistance=assistance)
         show_result(self.result, ['Counts'], title='Count', dst=result_dst)
 
     def _mask_creator(self, img):

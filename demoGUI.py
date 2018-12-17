@@ -1,6 +1,7 @@
 from tkinter import ttk, Menu, Button, Toplevel, Tk, filedialog, Message
 import os
 import datetime
+from functools import partial
 from viewer import PictureWindow
 from Unet_box.use_model import Unet_predictor
 from Unet_box.EOS_tools import path_list_creator
@@ -14,6 +15,7 @@ class Menubar(ttk.Frame):
         self.init_menubar()
         self.result_dir = None
         self.img_p_list = None
+        self.is_assist = False
 
     def on_exit(self):
         '''Exits program'''
@@ -60,6 +62,7 @@ class Menubar(ttk.Frame):
         self.menu_file.add_command(label='Exit', command=self.on_exit) # Adds an option to the menu
         self.menubar.add_cascade(menu=self.menu_file, label='File') # Adds File menu to the bar. Can also be used to create submenus.
         self.menu_file.add_command(label='Count from a Directory', command=self.count_from_dir)
+        self.menu_file.add_command(label='Assist from a Directory', command=partial(self.count_from_dir, True))
 
         self.menu_help = Menu(self.menubar) #Creates a "Help" menu
         self.menu_help.add_command(label='Help', command=self.display_help)
@@ -68,7 +71,11 @@ class Menubar(ttk.Frame):
 
         self.root.config(menu=self.menubar)
 
-    def count_from_dir(self):
+    def count_from_dir(self, assist=False):
+        if assist:
+            self.is_assist = True
+        else:
+            self.is_assist = False
         img_dir = filedialog.askdirectory(title='Select the directory where your slides are ...',
         mustexist=True)
         self.img_p_list = path_list_creator(img_dir)
@@ -79,7 +86,7 @@ class Menubar(ttk.Frame):
         The directory you selected is\n\
         {img_dir}\n\
         {amount} possible slices are there\n\
-        About {time_needed} is needed.\n\
+        Depending on your computer, about {time_needed} is needed.\n\
         If it is OK, please PRESS "Continue" and then\n\
         select a directory to save results.',
                             normal=False)
@@ -92,7 +99,8 @@ class Menubar(ttk.Frame):
             os.makedirs(visualize_dst, exist_ok=True)
         else:
             visualize_dst = None
-        actor.predict_from_imgs(self.img_p_list, self.result_dir, visualize_dst)
+        assistance = self.is_assist
+        actor.predict_from_imgs(self.img_p_list, self.result_dir, visualize_dst, assistance=assistance)
         self._message_prompt("Congratulation", f'Done! Please Cheak {self.result_dir}')
 
 class GUI(ttk.Frame):

@@ -2,7 +2,7 @@ from PIL import Image, ImageDraw, ImageFont
 import os
 import sys
 from collections import defaultdict
-from EOS_tools import get_name, path_list_creator
+from Unet_box.EOS_tools import get_name, path_list_creator
 from os.path import join
 
 def make_gif_from_dir(metric_dir_path, dst):
