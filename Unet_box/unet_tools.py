@@ -15,7 +15,7 @@ from datetime import datetime
 def segmentations_filters(shape, labels):
     canvas = np.zeros(shape, np.uint8)
     ranks_for_big = [750, 900, 1050, 1200, 1350]
-    rank_for_small = [200, 400]
+    rank_for_small = [300]
     for label in np.unique(labels):
         if label == 0:
             continue

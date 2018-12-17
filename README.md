@@ -1,34 +1,34 @@
 Project for EOS detection
-=======
+===
 
 ## Construction
-
-**HISTORY**
 
 ### 1. Kindle
 
 For preparation, we labeled 7 H&E slices. We marked the cells in these images by green points, which are easy to be implemented and dectected by both computers and human beings. 
 
-Cell_segment.py harnessed openCV's cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU and watershed to detect cells and then based on the point labels segmented them into 96 * 96 small individul cells.
+__Cell_segment.py__ harnessed openCV's *cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU* and *watershed* to detect cells and then based on the point labels to segment them into 96 * 96 small individul cells.
 
-Cell_traning.py constructed a simple CNN model on Keras that is on tensorflow. The CNN learned the cell images we created in the previous step. Then, it could roughly classify the cell type (whether it's a EOS) on a cell image.
+__Cell_traning.py__ constructed a simple CNN model on Keras powered by Tensorflow. The CNN learned the individul cell images we created in the previous step. Then, it could roughly classify the cell type (whether it's a EOS) on a cell image.
 
-We wanted to acclerate the advance of this project. Part of the bottleneck is the labor for label. In order to reduce the label work, We used the simple CNN model to help us. That is the content of Cell_recognition.py. After the openCV segmented possible cell areas, the CNN would label the areas by its judgement. It marked the EOS it thought on slices by black box. We corrected its work, then. If a label was right, we left it there. Otherwise, we marked a green point inside the black box. Besides, we also mark some cells it didn't notice by green point. As a result, the label areas are which only in black boxes or only have green points.
+We wanted to acclerate the advance of this project. A bottleneck is the limited labor we had for label. More importantly, labeling images is quite boring. To remove the bottleneck and avoid boredom, we used the simple CNN model to help us. That is the content of __Cell_recognition.py__. After the openCV segmented possible cell areas, the CNN would label the areas by its judgement. It marked EOS it classified by black box. We corrected its work, then. If a label was right, we left it there. Otherwise, we marked a green point inside the black box. Besides, we also mark some cells it didn't notice, by green point. As a result, the label areas are which only in black boxes or only have green points.
 
-Cell_refine.py read the special labels the CNN and we created before. Then, the CNN learned these new data. As a result, it could work better in helping us label. We could generate more data in a certain period of time, in this way, and it can learn more. Also, it learned more, and we can generate data faster. A virtuous circle emerged.
+__Cell_refine.py__ read the special labels the CNN and we created before. Then, the CNN learned these new data. As a result, it could work better in helping us label. We could generate more data in a certain period of time, in this way, and it can learn more. As a result, it learned more, and we can generate more data. A virtuous circle emerged.
 
-However, this method will come to its limitation. A cutting-edge technology is needed.
+However, this method would come to its limitation somehow. A cutting-edge technology is needed.
 
 ### 2. Unet
 
-The [paper](https://arxiv.org/abs/1505.04597) was Submitted on 18 May 2015 by authors -- Olaf Ronneberger, Philipp Fischer, Thomas Brox. Following is the abstract 
-<cite>There is large consent that successful training of deep networks requires many thousand annotated training samples. In this paper, we present a network and training strategy that relies on the strong use of data augmentation to use the available annotated samples more efficiently. The architecture consists of a contracting path to capture context and a symmetric expanding path that enables precise localization. We show that such a network can be trained end-to-end from very few images and outperforms the prior best method (a sliding-window convolutional network) on the ISBI challenge for segmentation of neuronal structures in electron microscopic stacks. Using the same network trained on transmitted light microscopy images (phase contrast and DIC) we won the ISBI cell tracking challenge 2015 in these categories by a large margin. Moreover, the network is fast. Segmentation of a 512x512 image takes less than a second on a recent GPU.</cite>
+The [__**paper**__](https://arxiv.org/abs/1505.04597) was Submitted on 18 May 2015 by authors -- Olaf Ronneberger, Philipp Fischer, Thomas Brox. Following is the abstract 
+--*There is large consent that successful training of deep networks requires many thousand annotated training samples. In this paper, we present a network and training strategy that relies on the strong use of data augmentation to use the available annotated samples more efficiently. The architecture consists of a contracting path to capture context and a symmetric expanding path that enables precise localization. We show that such a network can be trained end-to-end from very few images and outperforms the prior best method (a sliding-window convolutional network) on the ISBI challenge for segmentation of neuronal structures in electron microscopic stacks. Using the same network trained on transmitted light microscopy images (phase contrast and DIC) we won the ISBI cell tracking challenge 2015 in these categories by a large margin. Moreover, the network is fast. Segmentation of a 512x512 image takes less than a second on a recent GPU.*
 
 ![readme_imgs/u-net-architecture.png](readme_imgs/u-net-architecture.png)
 
-The origin version of Unet powered by Keras may be [this](https://github.com/zhixuhao/unet), which was inspired by [U-Net: Convolutional Networks for Biomedical Image Segmentation](http://lmb.informatik.uni-freiburg.de/people/ronneber/u-net/).
+The origin version of Unet powered by Keras may be [this](https://github.com/zhixuhao/unet), which was inspired by [U-Net: Convolutional Networks for Biomedical Image Segmentation](http://lmb.informatik.uni-freiburg.de/people/ronneber/u-net/). 
 
-Also, I have pretrain the model used the data from [Kaggle](https://www.kaggle.com/c/data-science-bowl-2018): _2018 Data Science Bowl -- Find the nuclei in divergent images to advance medical discovery._ The result has showed this dataset can slightly improve our model's performance, about 0.1% in accuracy.
+Our version looks like below.
+
+Also, I have pretrain the model used the data from [Kaggle](https://www.kaggle.com/c/data-science-bowl-2018): _2018 Data Science Bowl -- Find the nuclei in divergent images to advance medical discovery._ The result has showed this dataset can slightly improve our model's performance, about 0.1% in accuracy. Beside, Many functions are adaptations from its notebooks, including [nuclei-overview-to-submission](https://www.kaggle.com/kmader/nuclei-overview-to-submission/notebook), [keras-u-net-starter](https://www.kaggle.com/keegil/keras-u-net-starter-lb-0-277/notebook), [identification-and-segmentation-of-nuclei-in-cells](https://www.kaggle.com/paultimothymooney/identification-and-segmentation-of-nuclei-in-cells) and [basic-pure-computer-vision-segmentation](https://www.kaggle.com/gaborvecsei/basic-pure-computer-vision-segmentation-lb-0-229). Their insights did a great help. **Thank!**
 
 ### 3. Training
 

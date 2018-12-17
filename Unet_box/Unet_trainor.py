@@ -2,8 +2,8 @@ from keras.callbacks import Callback, EarlyStopping, ReduceLROnPlateau, ModelChe
 from sklearn.model_selection import train_test_split
 import sys
 from os.path import join
-from Unet_box.EOS_tools import data_creator
-from Unet_box.Unet import UNET
+from EOS_tools import data_creator
+from Unet import UNET
 
 def model_train(X_train, Y_train, X_test, Y_test, model_name=None, model_p=None):
     if not model_name:
@@ -12,7 +12,7 @@ def model_train(X_train, Y_train, X_test, Y_test, model_name=None, model_p=None)
     if model_p:
         model.load_weights(model_p)
 
-    earlystopper = EarlyStopping(patience=10, verbose=1)
+    earlystopper = EarlyStopping(patience=22, verbose=1)
     checkpointer = ModelCheckpoint(model_name+'.h5', verbose=1, save_best_only=True)
     model.fit(X_train, Y_train, batch_size=18,
             verbose=1, epochs=100,
@@ -22,10 +22,12 @@ def model_train(X_train, Y_train, X_test, Y_test, model_name=None, model_p=None)
     return model
 
 def training_from_dir(dir_train, dir_test, model_name=None, model_p=None):
-
-    X_train, Y_train = data_creator(join(dir_train, 'raw_imgs'), join(dir_train, 'labels'))
-    X_test, Y_test = data_creator(join(dir_test, 'raw_imgs'), join(dir_test, 'labels'))
-    # X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=42)
+    if dir_test == 'No':
+        X, Y = data_creator(join(dir_train, 'raw_imgs'), join(dir_train, 'labels'))
+        X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=42)
+    else:    
+        X_train, Y_train = data_creator(join(dir_train, 'raw_imgs'), join(dir_train, 'labels'))
+        X_test, Y_test = data_creator(join(dir_test, 'raw_imgs'), join(dir_test, 'labels'))
     trained_model = model_train(X_train, Y_train, X_test, Y_test, model_name, model_p)
     return trained_model
     

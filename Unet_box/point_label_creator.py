@@ -28,6 +28,7 @@ def mark_point(img, points, radius=5):
     return img
 
 def point_label_creator(dir_img, dir_label, dst):
+    os.makedirs(dst, exist_ok=True)
     for img_p, label_p, name in path_matcher(dir_img, dir_label):
         hsv = cv2.cvtColor(cv2.imread(label_p), cv2.COLOR_BGR2HSV)
         points = useful_marks(hsv)
@@ -39,5 +40,4 @@ if __name__ == "__main__":
     dir_img = sys.argv[1]
     dir_label = sys.argv[2]
     dst = sys.argv[3]
-    os.makedirs(dst, exist_ok=True)
     point_label_creator(dir_img, dir_label, dst)
