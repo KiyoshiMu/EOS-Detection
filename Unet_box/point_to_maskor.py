@@ -7,12 +7,12 @@ from scipy import ndimage
 import numpy as np
 from Unet_box.EOS_tools import point_detect, inside, middle, path_matcher
 
-def watershed_labels(img):
+def watershed_labels(img, iterations=0):
     """the lines is adapted from https://www.pyimagesearch.com/2015/11/02/watershed-opencv"""
     shifted = cv2.GaussianBlur(img, (7, 7), 0)
     gray = cv2.cvtColor(shifted, cv2.COLOR_BGR2GRAY)
     thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
-    thresh = cv2.erode(thresh, np.ones((7, 7),np.uint8), iterations=0)
+    thresh = cv2.erode(thresh, np.ones((7, 7),np.uint8), iterations=iterations)
     D = ndimage.distance_transform_edt(thresh)
     localMax = peak_local_max(D, indices=False, min_distance=5, labels=thresh)
     markers = ndimage.label(localMax, structure=np.ones((3, 3)))[0]
@@ -34,7 +34,7 @@ def mask_creator(img_p, label_p, dst, name):
     for label in np.unique(labels):
         if label == 0:
             continue
-        mask = np.zeros(img.shape[:2], dtype="uint8")
+        mask = np.zeros(img.shape[:2], np.uint8)
         mask[labels == label] = 255
         cnts = cv2.findContours(mask, cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)[-2]
         c = max(cnts, key=cv2.contourArea)

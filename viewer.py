@@ -17,7 +17,8 @@ from collections import deque
 class PictureWindow(Canvas):
     def __init__(self, *args, **kwargs):
         Canvas.__init__(self, *args, **kwargs)
-
+        self.actor = kwargs.get('actor')
+        assert self.actor is not None, 'No Modle Is Loaded!'
         self.type_to_idx = {'origin':0, 'detection':1, 'mask':2}
         self.type_to_suffix = {'detection':'_pred', 'mask':'_mask'}
         # self.cur_type = deque(maxlen=2)
@@ -151,15 +152,14 @@ class PictureWindow(Canvas):
         
     def img_predict(self):
         raw_img = self.cache[self.loc][0]
-        actor.predict_from_img(raw_img, self.ID, visualize_dst=self.dst, mark_num=True)
+        self.actor.predict_from_img(raw_img, self.ID, visualize_dst=self.dst, mark_num=True)
         self.img_switcher(update_predicted=True)
 
 def main():
-    global actor
     actor = Unet_predictor('./Unet_box/not_fs_second.h5')
     # Creating Window
     root = Tk(className="EOS Predictor")
-    PictureWindow(root).pack(expand="yes",fill="both")
+    PictureWindow(root, actor=actor).pack(expand="yes",fill="both")
     # root.resizable(width=0,height=0)
     root.mainloop()
     

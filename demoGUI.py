@@ -104,7 +104,7 @@ class GUI(ttk.Frame):
 
     def openwindow(self):
         self.new_win = Toplevel(self.root) # Set parent
-        pic = PictureWindow(self.new_win)
+        pic = PictureWindow(self.new_win, actor=actor)
         pic.pack(expand="yes",fill="both")
 
     def init_gui(self):

@@ -27,10 +27,21 @@ However, this method will come to its limitation. A cutting-edge technology is n
 
 1. point_label_creator
 
+The aim of this part is to compromise with the deficits of a previous bad design that we use the boxed mared images to assist the label progress. However, when it comes to reuse these labeled images, boxes and masks don't cooperate well. It's too large to identify a single area. In contrary, points can do a good job in this work. As a result, we decide to convert the black boxes to green points, in order to make masks by labeled images.
+
+Now, we will generate two version of assistant prediction, a circle labeled version and a point labeled version. The circle labeled version can help the researchers detect and correct the mistakes the model made. It's just because a circle is easy to be seen by nake eyes. The point labeled version can record the prediction the model made and it will not confuse the openCV, when the openCV creats masks by labeled images.
+
 2. point_to_maskor
+
+The aim of this part is to convert green points to masks. Unet uses masks as its outcomes. To train a Unet model, enough masks are necessary.
+
+The downside of this part is that we use watershed algorithm to segment areas in the first place. Then, the quality of the masks is unstable. However, a large number of training images can circumvent this weakness. Moreover, we want to make the Unet model can learn as many scenes as possibel.
 
 3. tile_creator
 
+The information in H&E slides is important, so we decide not to limit it at the beginning, that is not to resize the images. The aim of this part is to separate large images into small images. The original images are usually 1920 * 1440. We create 256 * 256 small images from them. We make the images contain overlaps to contain virgin information from the original images. The number of the small images is to make the overall overlap areas as small as possible.
+
 4. Unet_trainor
+
 
 5. use_model

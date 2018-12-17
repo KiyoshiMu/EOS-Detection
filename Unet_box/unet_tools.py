@@ -130,10 +130,11 @@ def mask_visualization(img, cnts, method='circle', **kargs):
         color_dict = {'cyan':(255, 255, 0), 'green':(0, 255, 0), 'black': (0, 0, 0)}
         use_color = color_dict.get(color, (255, 255, 0))
         if method == 'circle':
-            expansion=kargs.get('expansion', 0)
-            target=kargs.get('target', None)
+            expansion = kargs.get('expansion', 0)
+            target = kargs.get('target', None)
+            thickness = kargs.get('thickness', 2)
             for c in cnts:
-                draw_circle(cur_img, c, use_color, expansion, target=target)
+                draw_circle(cur_img, c, use_color, expansion, thickness=thickness, target=target)
         else:
             draw_origin(cur_img, cnts, use_color)
             
