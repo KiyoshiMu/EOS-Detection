@@ -13,7 +13,7 @@ def box_detect(hsv):
     return cnts
 
 def useful_marks(hsv):
-    points = point_detect(hsv)
+    points = point_detect(hsv, yellow=True)
     boxes = box_detect(hsv)
     useful_boxes = [box for box in boxes if not any([inside(point, box) for point in points])]
     useful_points = [point for point in points if not any([inside(point, box) for box in boxes])]

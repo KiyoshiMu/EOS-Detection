@@ -12,7 +12,7 @@ def model_train(X_train, Y_train, X_test, Y_test, model_name=None, model_p=None)
     if model_p:
         model.load_weights(model_p)
 
-    earlystopper = EarlyStopping(patience=22, verbose=1)
+    earlystopper = EarlyStopping(patience=10, verbose=1)
     checkpointer = ModelCheckpoint(join('Unet_box',model_name+'.h5'), verbose=1, save_best_only=True)
     model.fit(X_train, Y_train, batch_size=18,
             verbose=1, epochs=100,

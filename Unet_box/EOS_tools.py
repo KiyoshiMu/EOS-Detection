@@ -10,11 +10,15 @@ def middle(cnt):
     cy = int(M['m01']/M['m00'])
     return (cx, cy)
 
-def point_detect(hsv):
+def point_detect(hsv, yellow=False):
     """"""
-    lower_green = np.array([50,100, 50])
-    upper_green = np.array([70,255, 255])
-    mask = cv2.inRange(hsv, lower_green, upper_green)
+    if yellow:
+        lower = np.array([20, 100, 100])
+        upper = np.array([30, 255, 255])
+    else:
+        lower = np.array([50,100, 50])
+        upper = np.array([70,255, 255])
+    mask = cv2.inRange(hsv, lower, upper)
     cnts = cv2.findContours(mask, cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)[-2]
     points = [middle(cnt) for cnt in cnts]
     return points

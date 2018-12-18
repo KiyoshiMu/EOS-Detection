@@ -18,6 +18,11 @@ At that moment, we had a huge mistake in design, that is we let the black boxes 
 **Cell_refine.py** read the special labels the CNN and we created before. Then, the CNN learned these new data. As a result, it could work better in helping us label. We could generate more data in a certain period of time, in this way, and it can learn more. As a result, it learned more, and we can generate more data. A virtuous circle emerged.
 
 However, this method would come to its limitation somehow. A cutting-edge technology is needed.
+![alt text](readme_imgs/2018-9-5.jpg "Kindel Phase | Phase Zero")
+![alt text](readme_imgs/2018-9-25.jpg "Phase Zero Outcome -> Phase One Input")
+![alt text](readme_imgs/2018-10-13.jpg "Phase One Outcome -> Phase Two Input")
+![alt text](readme_imgs/2018-10-25.jpg "Phase Two Outcome -> Phase Three Input")
+It's hard to improve the performance further.
 
 ### 2. Unet
 
@@ -30,7 +35,7 @@ The origin version of Unet powered by Keras may be [this](https://github.com/zhi
 
 Our version looks like below.
 
-![created by tensorboard](readme_imgs/graph_run.png)
+![alt text](readme_imgs/graph_run.png "created by tensorboard")
 
 Also, I have pretrain the model used the data from [Kaggle](https://www.kaggle.com/c/data-science-bowl-2018): _2018 Data Science Bowl -- Find the nuclei in divergent images to advance medical discovery._ However, The result has showed this dataset cannot help to improve our model's performance. The lowest *val_loss* of __from stracth__ model is 0.02164, while that of __on kaggle dataset__ model is 0.02295. The differnece is not evident. Still, Many functions are adaptations from its notebooks, including [nuclei-overview-to-submission](https://www.kaggle.com/kmader/nuclei-overview-to-submission/notebook), [keras-u-net-starter](https://www.kaggle.com/keegil/keras-u-net-starter-lb-0-277/notebook), [identification-and-segmentation-of-nuclei-in-cells](https://www.kaggle.com/paultimothymooney/identification-and-segmentation-of-nuclei-in-cells) and [basic-pure-computer-vision-segmentation](https://www.kaggle.com/gaborvecsei/basic-pure-computer-vision-segmentation-lb-0-229). Their insights did a great help. **Thank!**
 
@@ -39,39 +44,39 @@ Also, I have pretrain the model used the data from [Kaggle](https://www.kaggle.c
 __Now, the following part 1, 2, 3 is combined into a pipeline *preparation.py*.__
 
 1. point_label_creator
----
-Input: a raw images directory path; a labeled images directory path; a directory path for saving
-Return: point label **.png** files in saving directory
----
+
+_Input: a raw images directory path; a labeled images directory path; a directory path for saving_
+_Return: point label **.png** files in saving directory_
+
 The aim of this part is to compromise with the deficits of a previous bad design that we use the boxed mared images to assist the label progress. However, when it comes to reuse these labeled images, boxes and masks don't cooperate well. It's too large to identify a single area. In contrary, points can do a good job in this work. As a result, we decide to convert the black boxes to green points, in order to make masks by labeled images.
 
 Now, we will generate two version of assistant prediction, a circle labeled version and a point labeled version. The circle labeled version can help the researchers detect and correct the mistakes the model made. It's just because a circle is easy to be seen by nake eyes. The point labeled version can record the prediction the model made and it will not confuse the openCV, when the openCV creats masks by labeled images. _As a result, this part may be no longer useful._
 
 2. point_to_maskor
----
-Input: a raw images directory path; a point labeled images directory path; a directory path for saving
-Return: mask **.png** files in saving directory
----
+
+_Input: a raw images directory path; a point labeled images directory path; a directory path for saving_
+_Return: mask **.png** files in saving directory_
+
 The aim of this part is to convert green points to masks. Unet uses masks as its outcomes. To train a Unet model, enough masks are necessary.
 
 The downside of this part is that we use watershed algorithm to segment areas in the first place. Then, the quality of the masks is unstable. However, a large number of training images can circumvent this weakness. Moreover, we want to make the Unet model can learn as many scenes as possibel.
 
 3. tile_creator
----
-Input: a raw images directory path; a mask images directory path; a directory path for saving
-Return: tile **.png** files in saving directory
----
+
+_Input: a raw images directory path; a mask images directory path; a directory path for saving_
+_Return: tile **.png** files in saving directory_
+
 
 The information in H&E slides is important, so we decide not to limit it at the beginning, that is not to resize the images. The aim of this part is to separate large images into small images. The original images are usually 1920 * 1440. We create 256 * 256 small images from them. We make the images contain overlaps to contain virgin information from the original images. The number of the small images is to make the overall overlap areas as small as possible.
 
 4. Unet_trainor
----
-Input: tiles for traing directory path; tiles for test directory path; model name; retrained model path
+
+_Input: tiles for traing directory path; tiles for test directory path; model name; retrained model path_
+_Return: tile **.png** files in saving directory_
 __(The model with *.h5* suffix is saved in the director *unet_tools* for *use_model.py*'s future use.)__
 _(If the "tiles for test directory path" is "No", this stript will ctrate train dataset and test datasat from the tiles in the "tiles for traing directory".)_
 _(If "the retrained model path" is not provided, the stript will generate model from stratch.)_
-Return: tile **.png** files in saving directory
----
+
 This part can train our model from scratch or retrain the previous existing model. The function is quite simple. See more information in **2.Unet part**.
 
 ## Usage
