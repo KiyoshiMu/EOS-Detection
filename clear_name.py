@@ -12,18 +12,19 @@ def clear_name(img_p_list, dst, befores, afters):
     
     for path in img_p_list:
         parent, f = split(path)
+        fn = f
         for before, after in zip(befores, afters):
-            fn = f.replace(before, after)
-            if before in fn:
-                print(f'rename  {f}')
-            try:
-                rename(join(parent, f), join(parent, fn))
-            except FileExistsError:
-                print(f)
-                move(join(parent, f), join(dst, f))
+            if before in f:
+                print(f'rename {f}')
+            fn = fn.replace(before, after)
+        try:
+            rename(join(parent, f), join(parent, fn))
+        except FileExistsError:
+            print(f)
+            move(join(parent, f), join(dst, f))
 
 def clear(dir_path, dst):
-    
+    makedirs(dst, exist_ok=True)
     lib = ['_ch00', '',
     '_.', '.',
     ' .', '.',
@@ -34,5 +35,6 @@ def clear(dir_path, dst):
     clear_name(creat_path_list(dir_path), dst, befores, afters)
 
 if __name__ == "__main__":
-    makedirs(sys.argv[2], exist_ok=True)
-    clear(sys.argv[1], sys.argv[2])
+    dir_path = sys.argv[1]
+    dst = sys.argv[2]
+    clear(dir_path, dst)
