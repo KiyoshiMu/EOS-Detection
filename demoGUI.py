@@ -141,8 +141,8 @@ class GUI(ttk.Frame):
 
 if __name__ == '__main__':
     global actor
-    # actor = Unet_predictor('./Unet_box/not_fs_second.h5')
-    actor = Unet_predictor('./Unet_box/Demo.h5')
+    # actor = Unet_predictor('./Unet_box/Demo.h5')
+    actor = Unet_predictor('./Unet_box/from_scratch.h5')
     root = Tk()
     GUI(root)
     root.mainloop()
