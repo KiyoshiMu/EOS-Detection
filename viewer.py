@@ -31,7 +31,7 @@ class PictureWindow(Canvas):
         self.img_switcher()
 
     def _temp_init(self):
-        img_dir = filedialog.askdirectory(title='Select the directory where your slides are in ...', 
+        img_dir = filedialog.askdirectory(title='Select the directory where your slides are ...', 
         mustexist=True)
         self.dst = join(dirname(img_dir), 'temp')
         os.makedirs(self.dst, exist_ok=True)

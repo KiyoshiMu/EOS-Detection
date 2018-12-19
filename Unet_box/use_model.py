@@ -77,8 +77,8 @@ class Unet_predictor:
         pred_cnts = pred_mask_to_cnts(pred_mask_img)
         return pred_cnts, pred_mask_img
 
-    def metric(self, img_p: str, label_p: str, from_dir=False, 
-        show=True, dst='.', name=None, show_mask=False, target=15) -> None:
+    def metric(self, img_p: str, label_p:str=None, show_info=False, 
+        show_img=True, dst='.', name=None, show_mask=False, target=15, label_points=None) -> None:
         """true_positives = Correct objects
         false_positives = Missed objects
         false_negatives = Extra objects
@@ -87,15 +87,19 @@ class Unet_predictor:
         If it is not form dir, we show the outcome directly"""
         if not name:
             name = get_name(img_p)
-        if not from_dir:
+        if show_info:
             print(name)
         
         img = cv2.imread(img_p)
-        mask_img = cv2.imread(label_p, 0)
         pred_cnts, pred_mask_img = self._mask_creator(img)
-        possible_right_cnts, label_cnts = overlap(mask_img, pred_cnts)
+        mask_img = None
+        if isinstance(label_points, list):
+            label_points = label_points
+        elif label_p:
+            mask_img = cv2.imread(label_p, 0)
+        possible_right_cnts, label_num = overlap(pred_cnts, mask_img=mask_img, label_points=label_points)
 
-        if show:
+        if show_img:
             fit_out = mask_visualization(img, possible_right_cnts, target=target)
             cv2.imwrite(os.path.join(dst, name+'_fit.jpg'), fit_out)
             pred_out = mask_visualization(img, pred_cnts, target=target)
@@ -103,16 +107,16 @@ class Unet_predictor:
         if show_mask:
             cv2.imwrite(os.path.join(dst, name+'_mask.jpg'), pred_mask_img)
 
-        values = stats(label_cnts, pred_cnts, possible_right_cnts)
+        values = stats(label_num, pred_cnts, possible_right_cnts)
         self.metric_record[name] = values
-        if not from_dir:
+        if show_info:
             print_dict = {}
             print_dict.update(dict(zip(self.metric_keys.split(', '), values)))
             print(print_dict)
 
     def metric_from_dir(self, img_dir_path, label_dir_path, dst):
         for img_p, label_p, name in path_matcher(img_dir_path, label_dir_path):
-            self.metric(img_p, label_p, from_dir=True, dst=dst, name=name)
+            self.metric(img_p, label_p, show_info=False, dst=dst, name=name)
         show_result(self.metric_record, self.metric_keys.split(', '), 
         title='Metric', dst=dst)
 

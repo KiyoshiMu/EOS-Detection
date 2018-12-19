@@ -35,13 +35,28 @@ def segmentations_filters(shape, labels):
     cnts = cv2.findContours(canvas, cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)[-2]
     return [c for c in cnts if cv2.contourArea(c) > 100]
 
-def mask_to_cnts_watershed(mask_img):
+def segmentations_filters_special(shape, labels):
+    cnts = []
+    for label in np.unique(labels):
+        if label == 0:
+            continue
+        temp = np.zeros(shape, np.uint8)
+        temp[labels == label] = 255
+        c = cv2.findContours(temp, cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)[-2][0]
+        cnts.append(c)
+    return [c for c in cnts if cv2.contourArea(c) > 400]
+
+def mask_to_cnts_watershed(mask_img, min_distance=3, for_real_mask=False):
     # shifted = cv2.GaussianBlur(mask_img, (3, 3), 0)
     thresh = cv2.threshold(mask_img, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
     D = ndimage.distance_transform_edt(thresh)
-    localMax = peak_local_max(D, indices=False, min_distance=3, labels=thresh)
+    localMax = peak_local_max(D, indices=False, min_distance=min_distance, labels=thresh)
     markers = ndimage.label(localMax)[0]
     labels = watershed(D * (-1), markers, mask=thresh)
+
+    if for_real_mask:
+        return segmentations_filters_special(mask_img.shape, labels)
+
     return segmentations_filters(mask_img.shape, labels)
 
 def mask_to_cnts_region(mask_img):
@@ -62,13 +77,11 @@ def mark_text(img, text:str) -> None:
     textY = int((img.shape[0] + textsize[1]) / 3 * 2.2)
     cv2.putText(img, text, (textX, textY), font, 11, 0, 4, cv2.LINE_AA)
 
-def overlap(mask_img, pred_cnts, use_point=False):
-    if use_point:
-        label_cnts = cv2.findContours(mask_img, cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)[-2]
-        label_points = [middle(cnt) for cnt in label_cnts]
+def overlap(pred_cnts, mask_img=None, label_points:list=None) -> list and int:
+    if label_points:
         cover_cnts = [c for c in pred_cnts 
-        if any([inside(point, c) for point in label_points])]
-
+        if any([inside(point, c, threshold=-7) for point in label_points])] # half of the minDistance 14 in point_loc_saver.py
+        label_num = len(label_points)
     else:
         shape = mask_img.shape
         label_cnts = mask2contour(mask_img)
@@ -76,7 +89,8 @@ def overlap(mask_img, pred_cnts, use_point=False):
         mask = cv2.drawContours(np.zeros(shape, dtype=np.uint8), pred_cnts, -1, 100, -1)
         cover = img + mask
         cover_cnts = mask2contour(cover)
-    return cover_cnts, label_cnts
+        label_num = len(label_cnts)
+    return cover_cnts, label_num
 
 def foolish_clean(shape, cnts):
     canvas = np.zeros(shape, np.uint8)
@@ -140,8 +154,8 @@ def mask_visualization(img, cnts, method='circle', **kargs):
             
     return cur_img
 
-def stats(label_cnts, pred_cnts, possible_right_cnts):
-    true_objects = len(label_cnts)
+def stats(label_num, pred_cnts, possible_right_cnts):
+    true_objects = label_num
     pred_objects = len(pred_cnts)
     true_positive = len(possible_right_cnts)
     false_positive = true_objects - true_positive

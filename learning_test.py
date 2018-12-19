@@ -19,9 +19,9 @@ def from_names_to_path_list(names:list, tiles_dir:str) -> dict:
         for fn in os.listdir(directory):
             parent = fn.rsplit('_', 1)[0]
             if parent in parents:
-                collector1[parent].append(join(tiles_dir, fn))
+                collector1[parent].append(join(directory, fn))
             else:
-                collector2[parent].append(join(tiles_dir, fn))
+                collector2[parent].append(join(directory, fn))
         container1[kind] = collector1
         container2[kind] = collector2
     return container1, container2

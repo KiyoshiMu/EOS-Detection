@@ -43,10 +43,10 @@ def path_matcher(dir_img, dir_label):
         if label_path:
             yield img_path, label_path, name
 
-def inside(point, cnt):
-    return cv2.pointPolygonTest(cnt, point, True) >= -3
+def inside(point, cnt, threshold=-3):
+    return cv2.pointPolygonTest(cnt, point, True) >= threshold
 
-def path_list_creator(dir_img, dir_label=None):
+def path_list_creator(dir_img, dir_label=None) -> list:
     img_p_list, label_p_list = [], []
     if dir_label:
         for img_p, label_p, _ in path_matcher(dir_img, dir_label):
