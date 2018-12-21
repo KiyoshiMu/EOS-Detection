@@ -1,6 +1,7 @@
-import pickle
-import os
 import sys
+import os
+sys.path.append(os.path.abspath('.'))
+import pickle
 from Unet_box.EOS_tools import path_list_creator
 from Unet_box.use_model import Unet_predictor
 from metric.metric_tools import load_pickle
@@ -27,8 +28,14 @@ def evaluate(models_p:str, img_dir:str, refer_pkl:str, dst:str) -> None:
         vis_dst = os.path.join(dst, os.path.basename(model_p))
         os.makedirs(vis_dst, exist_ok=True)
         for name, img_p in imgs.items():
-            label_points = answers[name]
-            actor.metric(img_p, name=name, label_points=label_points, dst=vis_dst)
+            refer = answers[name]
+            if isinstance(refer, list):
+                label_points = refer
+                label_p = None
+            elif isinstance(refer, str):
+                label_points = None
+                label_p = refer
+            actor.metric(img_p, name=name, label_p=label_p, label_points=label_points, dst=vis_dst)
         show_result(actor.metric_record, actor.metric_keys.split(', '), 
         title='Metric', dst=vis_dst)
 

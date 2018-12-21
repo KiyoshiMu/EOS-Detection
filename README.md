@@ -57,7 +57,7 @@ Also, I have pre-trained the model used the data from [Kaggle](https://www.kaggl
 
 __Now, the following part 1, 2, 3 is combined into a pipeline *preparation.py*.__
 
-1. point_label_creator
+#### 1. point_label_creator
 
 *Input: a raw images directory path; a labelled images directory path; a directory path for saving*
 
@@ -67,7 +67,7 @@ The aim of this part is to compromise with the deficits of a previous bad design
 
 Now, we will generate two versions of assistant prediction, a circle labelled version and a point labelled version. The circle labelled version can help the researchers detect and correct the mistakes the model made. It's just because a circle is easy to be seen by naked eyes. The point labelled version can record the prediction the model made and it will not confuse the openCV, when the openCV creates masks by labelled images. *As a result, this part may be no longer useful.*
 
-2. point_to_maskor
+#### 2. point_to_maskor
 
 *Input: a raw images directory path; a point labelled images directory path; a directory path for saving*
 
@@ -77,7 +77,7 @@ The aim of this part is to convert green points to masks. Unet uses masks as its
 
 The downside of this part is that we use watershed algorithm to segment areas in the first place. Then, the quality of the masks is unstable. However, a large number of training images can circumvent this weakness. Moreover, we want to make the Unet model can learn as many scenes as possible.
 
-3. tile_creator
+#### 3. tile_creator
 
 *Input: a raw images directory path; a mask images directory path; a directory path for saving*
 
@@ -86,7 +86,7 @@ The downside of this part is that we use watershed algorithm to segment areas in
 
 The information in H&E slides is important, so we decide not to limit it at the beginning, that is not to resize the images. The aim of this part is to separate large images into small images. The original images are usually 1920 * 1440. We create 256 * 256 small images from them. We make the images contain overlaps to contain virgin information from the original images. The number of small images is to make the overall overlap areas as small as possible.
 
-4. Unet_trainor
+#### 4. Unet_trainor
 
 *Input: tiles for training directory path; tiles for test directory path; model name; retrained model path*
 
@@ -101,39 +101,39 @@ This part can train our model from scratch or retrain the previous existing mode
 
 ### 1. Installation (MAKESHIFT version)
 
-1. Miniconda ~~Anaconda~~ -- Python data science platform 
+#### 1. Miniconda ~~Anaconda~~ -- Python data science platform 
 
-To shorten the download time. We first recommand download Miniconda, which provides the bacis *conda* platform for our application. See [Miniconda](https://conda.io/miniconda.html) download page. Currently, we recommend download Python 3.7 version. 
+To shorten the download time. We first recommend download Miniconda, which provides the basic *conda* platform for our application. See [Miniconda](https://conda.io/miniconda.html) download page. Currently, you need to download Python 3.7 version. 
 
-Or, see [Anaconda](https://www.anaconda.com/download/) download page. Currently, we recommend download Python 3.7 version as well. For more details, please check its [official documentation](https://docs.anaconda.com/anaconda/).
+Or, see [Anaconda](https://www.anaconda.com/download/) download page. Currently, you need to download Python 3.7 version as well. For more details, please check its [official documentation](https://docs.anaconda.com/anaconda/).
 
-There is no diffence bettween these two versions, if you only consider testing our software. If you are interested in Python, and want to learn more about it, Anaconda is a better choice. Anaconda supply many pre-installed packages that can save lots of time in a long run.
+There is no difference between these two versions if you only consider testing our software. If you are interested in Python and want to learn more about it, Anaconda is a better choice. Anaconda supply many pre-installed packages that can save lots of time in the long run.
 
-2. Required packages
+#### 2. Required packages
 
 **For Chinese Users, we recommend you input following commands in your Anaconda Prompt to use the [mirror](https://mirror.tuna.tsinghua.edu.cn/help/anaconda/) from Tsinghua University.**
 
-*conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free/*
+        conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free/
 
-*conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main/*
+        conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main/
 
-*conda config --set show_channel_urls yes*
+        conda config --set show_channel_urls yes
 
 **Continue, input following commands in your Anaconda Prompt**
 
-*conda create --name eos python=3.6 tensorflow-gpu opencv pandas keras scikit-learn pillow matplotlib scikit-image openpyxl*
+        conda create --name eos python=3.6 tensorflow-gpu opencv pandas keras scikit-learn pillow matplotlib scikit-image openpyxl
 
 If you have GPU in your computer, add the following line to improve the speed of procession.
 
-*conda install tensorflow-gpu*
+        conda install tensorflow-gpu
 
 __TODO (Tesing)__
 
-3. Clone or Download
+#### 3. Clone or Download
 
 We recommend you use git to _clone_ the [repository]https://github.com/Moo-YewTsing/EOS-Detection.git. by
 
-*git clone https://github.com/Moo-YewTsing/EOS-Detection.git*
+        git clone https://github.com/Moo-YewTsing/EOS-Detection.git
 
 Or you can simply _download_ all by this [link](https://codeload.github.com/Moo-YewTsing/EOS-Detection/zip/master).
 
@@ -141,7 +141,7 @@ Open your terminal, _cd_ to the directory where the repository's files are.
 
 ### 2. GUI
 
-*python demoGUI.py*
+        python demoGUI.py
 
 Then, a user interface will emerge. Check Help in the menubar.
 
@@ -149,25 +149,25 @@ Then, a user interface will emerge. Check Help in the menubar.
 
 Now, we provide two pipeline for data preparation and model evaluation.
 
-__Data Preparation__
+#### 1. __Data Preparation__
 
 Input your imgs_dir, labels_dir and dst to the following command.
 
 (imgs_dir is the path of the directory where original images are.
 labels_dir is the path of the directory where labelled images are. The labelled images can be green-point-marked only, green-point&black-box-marked mixed or black-box-marked only. For better performance, we suggest following our label rules and correspondent refining rules, that will be green-point-marked only.
-dst is the path where directories will be made, and data will be saved.)
+dst is the path where directories will be made and data will be saved.)
 
-*python pipe_preparation.py imgs_dir labels_dir dst*
+        python pipe_preparation.py imgs_dir labels_dir dst
 
-__Model Evaluation__
+#### 2. __Model Evaluation__
 
 Input your imgs_dir , masks_dir, tiles_dir and dst to the following command.
 
 (imgs_dir is the path of the directory where original images are.
 masks_dir is the path of the directory where masked images are.
 tiles_dir is the path of the directory where tile images are.
-dst is the path where directories will be made, and data will be saved.)
+dst is the path where directories will be made and data will be saved.)
 
-*python pipe_metric.py imgs_dir masks_dir tiles_dir dst*
+        python pipe_metric.py imgs_dir masks_dir tiles_dir dst
 
 __TODO__

@@ -44,7 +44,7 @@ def segmentations_filters_special(shape, labels):
         temp[labels == label] = 255
         c = cv2.findContours(temp, cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)[-2][0]
         cnts.append(c)
-    return [c for c in cnts if cv2.contourArea(c) > 400]
+    return [c for c in cnts if cv2.contourArea(c) > 300]
 
 def mask_to_cnts_watershed(mask_img, min_distance=3, for_real_mask=False):
     # shifted = cv2.GaussianBlur(mask_img, (3, 3), 0)
@@ -84,7 +84,7 @@ def overlap(pred_cnts, mask_img=None, label_points:list=None) -> list and int:
         label_num = len(label_points)
     else:
         shape = mask_img.shape
-        label_cnts = mask2contour(mask_img)
+        label_cnts = mask2contour(mask_img, iterations=1)
         img = cv2.drawContours(np.zeros(shape, dtype=np.uint8), label_cnts, -1, 100, -1) 
         mask = cv2.drawContours(np.zeros(shape, dtype=np.uint8), pred_cnts, -1, 100, -1)
         cover = img + mask

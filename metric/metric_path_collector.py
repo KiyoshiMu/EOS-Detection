@@ -41,12 +41,15 @@ def names_separator(all_names:list, percent=0.2) -> list:
 def names_creator(dir_path):
     return [get_name(fn) for fn in os.listdir(dir_path)]
 
-def train_test_info_creator(label_dir:str, tiles_dir:str, dst:str, percent:float=0.2) -> None:
+def train_test_info_creator(label_dir:str, tiles_dir:str, dst:str, percent:float=0.2, test_dir=None) -> None:
     """label_dir is the directory where point labelled images are;
     tiles_dir is the directory where all tiles are, including 'raw_imgs' and 'labels';
     dst is the directory where the 'test.pkl' and the 'others.pkl' will be saved"""
     all_names = names_creator(label_dir)
-    test_names = names_separator(all_names, percent=percent)
+    if test_dir:
+        test_names = [get_name(fn) for fn in os.listdir(test_dir)]
+    else:
+        test_names = names_separator(all_names, percent=percent)
     test_family, other_family = from_names_to_path_list(test_names, tiles_dir)
     save_dict(test_family, 'test', dst)
     save_dict(other_family, 'others', dst)
