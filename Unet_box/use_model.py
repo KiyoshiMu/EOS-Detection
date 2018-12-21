@@ -14,11 +14,13 @@ from Unet_box.unet_tools import mark_text, overlap, pred_mask_to_cnts, mask_visu
 
 class Unet_predictor:
 
-    def __init__(self, model_p):
+    def __init__(self, model_p=None):
         self.model = UNET()
-        self.model.load_weights(model_p)
+        if model_p:
+            self.load_weights(model_p)
+        else:
+            self.loaded = False
         self.size = (256, 256)
-        self.path = model_p
         self.result = {}
         self.metric_record = {}
         self.metric_keys = "Number_of_true_objects, Number_of_predicted_objects, true_positive, false_positive, false_negative, Precision, Sensitivity"
@@ -29,7 +31,18 @@ class Unet_predictor:
     def __call__(self, img):
         return self.predict(img)
 
+    def clear(self):
+        self.metric_record.clear()
+        
+    def isloaded(self):
+        return self.loaded
+
+    def load_weights(self, model_p):
+        self.model.load_weights(model_p)
+        self.loaded = True
+        
     def predict(self, img):
+        assert self.isloaded(), "No weights, Stop Prediction"
         w, h = self.size
         w_stride, _, w_out, h_stride, _, h_out = tile_simulation(img, self.size)
         raw_mask = np.zeros((h_out, w_out, 1))
