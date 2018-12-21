@@ -1,14 +1,11 @@
-import pickle
+import sys
+import os
+sys.path.append(os.path.abspath('.'))
 from Unet_trainor import model_train
 from Unet_box.EOS_tools import read_from_path_list
+from metric.metric_tools import load_pickle
 import random
-import os
-import sys
-
-def load_pickle(pkl_path) -> dict:
-    with open(pkl_path, 'rb') as temp:
-        container = pickle.load(temp)
-        return container
+import gc
 
 def data_prepare(family:dict, kind):
     p_list = []
@@ -27,7 +24,8 @@ def from_dict_to_data(family:dict):
     Y = data_prepare(family, 'labels')
     return X, Y
 
-def train_model(train_pkl_path, test_pkl_path, dst):
+# Now ,I don't know how to realse memory after finish a model. So badly, I have to add the number from terminal
+def train_model(train_pkl_path, test_pkl_path, dst, start_num=None):
     train_dict = load_pickle(train_pkl_path)
     test_dict = load_pickle(test_pkl_path)
     X_test, Y_test = from_dict_to_data(test_dict)
@@ -36,9 +34,10 @@ def train_model(train_pkl_path, test_pkl_path, dst):
     train_amount = len(train_names)
     # in this case keras will only take care of the shuffle of tiles, now it's for whole images
     random.shuffle(train_names)
-    train_img_num = 0
-    while train_img_num < train_amount:
+    train_img_num = start_num or 0
+    if train_img_num < train_amount:
         train_img_num += 10
+        print(f'Current on {train_img_num} images')
         if train_img_num > train_amount:
             train_img_num = train_amount
         sub_train_name = train_names[:train_img_num]
@@ -46,7 +45,8 @@ def train_model(train_pkl_path, test_pkl_path, dst):
         X_train, Y_train = from_dict_to_data(sub_train_dict)
         result_dst = os.path.join(dst, str(train_img_num))
         os.makedirs(result_dst, exist_ok=True)
-        _ = model_train(X_train, Y_train, X_test, Y_test, model_name=str(train_img_num), dst=result_dst)
+        model_train(X_train, Y_train, X_test, Y_test, model_name=str(train_img_num), dst=result_dst)
+        gc.collect()
 
 def batch_stat():
     pass
@@ -59,6 +59,11 @@ def batch_stat():
 
 if __name__ == "__main__":
     train_pkl_path = sys.argv[1]
-    test_pkl_path = sys.argv[2]
+    test_pkl_path = sys.argv[2
+    ]
     dst = sys.argv[3]
-    train_model(train_pkl_path, test_pkl_path, dst)
+    try:
+        start_num = int(sys.argv[4])
+    except IndexError:
+        start_num = None
+    train_model(train_pkl_path, test_pkl_path, dst, start_num=start_num)
