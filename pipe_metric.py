@@ -7,7 +7,7 @@ import sys
 
 def from_label_to_metric(img_dir, refer_dir:str, tiles_dir:str, dst:str, point_label=True):
     pickle_dir = join(dst, 'temp_pkl')
-    train_test_info_creator(refer_dir, tiles_dir, pickle_dir, test_dir=r'E:\EOS\test') #makeshift!!!
+    up_bar = train_test_info_creator(refer_dir, tiles_dir, pickle_dir, test_dir=r'E:\EOS\test') #makeshift!!!
     test_pkl_p = abspath(join(pickle_dir, 'test.pkl'))
     other_pkl_p = abspath(join(pickle_dir, 'others.pkl'))
     print('Path collection, done!')
@@ -18,7 +18,7 @@ def from_label_to_metric(img_dir, refer_dir:str, tiles_dir:str, dst:str, point_l
 
     trainor_p = abspath('./metric/metric_trainor.py')
     models_p = abspath(join(dst, 'progress_models'))
-    os.system(f'for /L %i in (0, 10, 70) do python {trainor_p} {other_pkl_p} {test_pkl_p} {models_p} %i')
+    os.system(f'for /L %i in (0, 10, {(up_bar-1)//10*10}) do python {trainor_p} {other_pkl_p} {test_pkl_p} {models_p} %i')
     print('Models training, done')
     eval_dst = join(dst, 'results')
     evaluate(models_p, img_dir, refer_pkl_p, eval_dst)

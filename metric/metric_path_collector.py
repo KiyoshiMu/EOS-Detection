@@ -53,6 +53,7 @@ def train_test_info_creator(label_dir:str, tiles_dir:str, dst:str, percent:float
     test_family, other_family = from_names_to_path_list(test_names, tiles_dir)
     save_dict(test_family, 'test', dst)
     save_dict(other_family, 'others', dst)
+    return len(other_family['labels'])
 
 if __name__ == "__main__":
     label_dir = sys.argv[1]

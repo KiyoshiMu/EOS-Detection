@@ -113,7 +113,7 @@ class Unet_predictor:
         possible_right_cnts, label_num = overlap(pred_cnts, mask_img=mask_img, label_points=label_points)
 
         if show_img:
-            fit_out = mask_visualization(img, possible_right_cnts, target=target)
+            fit_out = mask_visualization(img, possible_right_cnts, method='box', target=target)
             cv2.imwrite(os.path.join(dst, name+'_fit.jpg'), fit_out)
             pred_out = mask_visualization(img, pred_cnts, target=target)
             cv2.imwrite(os.path.join(dst, name+'_pred.jpg'), pred_out)

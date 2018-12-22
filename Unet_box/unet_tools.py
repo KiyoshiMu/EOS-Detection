@@ -125,6 +125,11 @@ def draw_circle(img, c, use_color, expansion=0, thickness=2, target=None):
     radius = target or int(radius) + expansion
     cv2.circle(img, center, radius, use_color, thickness)
 
+def draw_box(img, c, use_color, thickness=2, target=None):
+    x, y, poss_w, poss_h = cv2.boundingRect(c)
+    w = h = target or max((poss_w, poss_h))
+    cv2.rectangle(img, (x, y), (x + w, y + h), use_color, thickness)
+
 def draw_colorful(img, cnts):
     label = np.zeros((img.shape[:2]))
     for number, c in enumerate(cnts, start=1):
@@ -149,6 +154,11 @@ def mask_visualization(img, cnts, method='circle', **kargs):
             thickness = kargs.get('thickness', 2)
             for c in cnts:
                 draw_circle(cur_img, c, use_color, expansion, thickness=thickness, target=target)
+        elif method == 'box':
+            target = kargs.get('target', None)
+            thickness = kargs.get('thickness', 2)
+            for c in cnts:
+                draw_box(cur_img, c, use_color, thickness=thickness, target=target)
         else:
             draw_origin(cur_img, cnts, use_color)
             
@@ -160,9 +170,14 @@ def stats(label_num, pred_cnts, possible_right_cnts):
     true_positive = len(possible_right_cnts)
     false_positive = true_objects - true_positive
     false_negative = pred_objects - true_positive
-    precision = true_positive / (true_positive + false_positive)
-    sensitivity = true_positive / (true_positive + false_negative)
-
+    try:
+        precision = true_positive / (true_positive + false_positive)
+    except ZeroDivisionError:
+        precision = 0
+    try:
+        sensitivity = true_positive / (true_positive + false_negative)
+    except ZeroDivisionError:
+        sensitivity = 0
     values = [true_objects, pred_objects, true_positive, 
     false_positive, false_negative, precision, sensitivity]
     return values

@@ -97,6 +97,32 @@ _(If "the retrained model path" is not provided, the script will generate a mode
 
 This part can train our model from scratch or retrain the previous existing model. The function is quite simple. See more information in **2.Unet part**.
 
+### Current Performance
+
+      Number_of_true_objects    Number_of_predicted_objects    true_positive    false_positive    false_negative    Precision    Sensitivity
+--  ------------------------  -----------------------------  ---------------  ----------------  ----------------  -----------  -------------
+10                      1438                           1926             1089               349               837      13.8764        10.8369
+20                      1438                           1393             1044               394               349      12.819         14.4612
+30                      1438                           1406             1079               359               327      13.768         14.8823
+40                      1438                           1470             1113               325               357      14.3304        14.17
+50                      1438                           1567             1138               300               429      14.7255        13.8647
+60                      1438                           1514             1134               304               380      14.4954        14.7865
+70                      1438                           1267             1012               426               255      12.9596        15.684
+78                      1438                           1278             1036               402               242      12.7549        16.0562
+
+![alt text](readme_imgs/12-22_09-44_metric.jpg "Learning rate")
+
+The relation between image numbers and the performance could be described as below.
+
+For f1_score:
+LinregressResult(slope=0.0010756303344959855, intercept=0.6951261272296764, rvalue=0.648333239909611, pvalue=0.08206652914738156, stderr=0.0005156764476118985)
+
+For Precision:
+LinregressResult(slope=-0.005149486845288034, intercept=13.946595366972604, rvalue=-0.15769730861731646, pvalue=0.7091830818063778, stderr=0.013164235788984605)
+
+For Sensitivity:
+LinregressResult(slope=0.05090573824063784, intercept=12.06468076162886, rvalue=0.7694440769920413, pvalue=0.025584957596286786, stderr=0.017251251891506822)
+
 ## Usage
 
 ### 1. Installation (MAKESHIFT version)
