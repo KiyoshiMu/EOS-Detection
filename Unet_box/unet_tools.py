@@ -168,8 +168,8 @@ def stats(label_num, pred_cnts, possible_right_cnts):
     true_objects = label_num
     pred_objects = len(pred_cnts)
     true_positive = len(possible_right_cnts)
-    false_positive = true_objects - true_positive
-    false_negative = pred_objects - true_positive
+    false_positive = pred_objects - true_positive
+    false_negative = true_objects - true_positive
     try:
         precision = true_positive / (true_positive + false_positive)
     except ZeroDivisionError:

@@ -99,28 +99,35 @@ This part can train our model from scratch or retrain the previous existing mode
 
 ### 1.4 Current Performance
 
-We randomly sampled 20 well point-labeled images into test set. By using different number of training images, we computer the how precision, sensitivity and f1_score change as the training image number changes.
+We randomly sampled 20 well point-labelled images into a test set. By using a different number of training images, we computer how precision, sensitivity and f1_score change as the training image number changes. Also, taking this in mind that the new data's quality will influence the result of test evaluation. The quality not only refers to the accuracy of labels, also to the extent of similarity between the test and these data. 
 
-|   training image number |   true_positive |   false_positive |   false_negative |   precision |   sensitivity |   f1_score |
-|------------------------:|----------------:|-----------------:|-----------------:|------------:|--------------:|-----------:|
-|                      10 |            1089 |              349 |              837 |    0.757302 |      0.565421 |   0.647444 |
-|                      20 |            1044 |              394 |              349 |    0.726008 |      0.749462 |   0.737549 |
-|                      30 |            1079 |              359 |              327 |    0.750348 |      0.767425 |   0.75879  |
-|                      40 |            1113 |              325 |              357 |    0.773992 |      0.757143 |   0.765475 |
-|                      50 |            1138 |              300 |              429 |    0.791377 |      0.726228 |   0.757404 |
-|                      60 |            1134 |              304 |              380 |    0.788595 |      0.749009 |   0.768293 |
-|                      70 |            1012 |              426 |              255 |    0.703755 |      0.798737 |   0.748244 |
-|                      78 |            1036 |              402 |              242 |    0.720445 |      0.810642 |   0.762887 |
+|    |   true_positive |   false_positive |   false_negative |   precision |   sensitivity |   f1_score |   training image number |
+|---:|----------------:|-----------------:|-----------------:|------------:|--------------:|-----------:|------------------------:|
+|  0 |            1089 |              837 |              349 |    0.565421 |      0.757302 |   0.647444 |                      10 |
+|  1 |            1116 |              462 |              322 |    0.707224 |      0.776078 |   0.740053 |                      15 |
+|  2 |            1044 |              349 |              394 |    0.749462 |      0.726008 |   0.737549 |                      20 |
+|  3 |            1115 |              600 |              323 |    0.650146 |      0.775382 |   0.707263 |                      25 |
+|  4 |            1079 |              327 |              359 |    0.767425 |      0.750348 |   0.75879  |                      30 |
+|  5 |            1157 |              491 |              281 |    0.702063 |      0.80459  |   0.749838 |                      35 |
+|  6 |            1113 |              357 |              325 |    0.757143 |      0.773992 |   0.765475 |                      40 |
+|  7 |            1072 |              343 |              366 |    0.757597 |      0.74548  |   0.75149  |                      45 |
+|  8 |            1138 |              429 |              300 |    0.726228 |      0.791377 |   0.757404 |                      50 |
+|  9 |             969 |              236 |              469 |    0.804149 |      0.673853 |   0.733258 |                      55 |
+| 10 |            1134 |              380 |              304 |    0.749009 |      0.788595 |   0.768293 |                      60 |
+| 11 |            1101 |              326 |              337 |    0.771549 |      0.765647 |   0.768586 |                      65 |
+| 12 |            1012 |              255 |              426 |    0.798737 |      0.703755 |   0.748244 |                      70 |
+| 13 |            1049 |              295 |              389 |    0.780506 |      0.729485 |   0.754134 |                      75 |
+| 14 |            1036 |              242 |              402 |    0.810642 |      0.720445 |   0.762887 |                      78 |
 
-![alt text](readme_imgs/12-22_17-39_metric.jpg "Learning rate")
+![alt text](readme_imgs/12-23_10-19_metric.jpg "Learning rate")
 
 The correlation between image numbers and the performance could be described as below.
 
-|             |   Pearson correlation coefficient |   p value |
-|:------------|----------------------------------:|----------:|
-| precision   |                         -0.204891 | 0.626445  |
-| sensitivity |                          0.722128 | 0.0430809 |
-| f1_score    |                          0.648333 | 0.0820665 |
+|             |        slope |   intercept |   correlation coefficient |   two-sided p-value |   Standard error |
+|:------------|-------------:|------------:|--------------------------:|--------------------:|-----------------:|
+| precision   |  0.00216931  |    0.642491 |                  0.746433 |          0.00139126 |      0.00053639  |
+| sensitivity | -0.000585995 |    0.778447 |                 -0.360483 |          0.186858   |      0.000420542 |
+| f1_score    |  0.00085291  |    0.705113 |                  0.60903  |          0.015961   |      0.000308068 |
 
 ## 2. Usage
 
