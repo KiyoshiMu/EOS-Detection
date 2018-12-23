@@ -19,21 +19,13 @@ At that moment, we had a huge mistake in design, that is we let the black boxes 
 
 However, this method would come to its limitation somehow. Cutting-edge technology is needed.
 
-![alt text](readme_imgs/2018-9-5.jpg "Kindle Phase | Phase Zero")
+![Phase Zero](readme_imgs/2018-9-5.jpg "Kindle Phase | Phase Zero")
 
-*Kindel Phase | Phase Zero*
+![Phase Zero Outcome](readme_imgs/2018-9-25.jpg "Phase Zero Outcome -> Phase One Input")
 
-![alt text](readme_imgs/2018-9-25.jpg "Phase Zero Outcome -> Phase One Input")
+![Phase One Outcome](readme_imgs/2018-10-13.jpg "Phase One Outcome -> Phase Two Input")
 
-*Phase Zero Outcome -> Phase One Input*
-
-![alt text](readme_imgs/2018-10-13.jpg "Phase One Outcome -> Phase Two Input")
-
-*Phase One Outcome -> Phase Two Input*
-
-![alt text](readme_imgs/2018-10-25.jpg "Phase Two Outcome -> Phase Three Input")
-
-*Phase Two Outcome -> Phase Three Input*
+![Phase Two Outcome](readme_imgs/2018-10-25.jpg "Phase Two Outcome -> Phase Three Input")
 
 It's hard to improve the performance further.
 
@@ -43,13 +35,13 @@ The [__**paper**__](https://arxiv.org/abs/1505.04597) was Submitted on 18 May 20
 
 --*There is large consent that successful training of deep networks requires many thousand annotated training samples. In this paper, we present a network and training strategy that relies on the strong use of data augmentation to use the available annotated samples more efficiently. The architecture consists of a contracting path to capture context and a symmetric expanding path that enables precise localization. We show that such a network can be trained end-to-end from very few images and outperforms the prior best method (a sliding-window convolutional network) on the ISBI challenge for segmentation of neuronal structures in electron microscopic stacks. Using the same network trained on transmitted light microscopy images (phase contrast and DIC) we won the ISBI cell tracking challenge 2015 in these categories by a large margin. Moreover, the network is fast. Segmentation of a 512x512 image takes less than a second on a recent GPU.*
 
-![alt text](readme_imgs/u-net-architecture.png "u-net-architecture")
+![U-net Architecture](readme_imgs/u-net-architecture.png "u-net-architecture")
 
 The origin version of Unet powered by Keras may be [this](https://github.com/zhixuhao/unet), which was inspired by [U-Net: Convolutional Networks for Biomedical Image Segmentation](http://lmb.informatik.uni-freiburg.de/people/ronneber/u-net/). 
 
 Our version looks like below.
 
-![alt text](readme_imgs/graph_run.png "created by tensorboard")
+![Practical Architecture](readme_imgs/graph_run.png "created by tensorboard")
 
 Also, I have pre-trained the model used the data from [Kaggle](https://www.kaggle.com/c/data-science-bowl-2018): _2018 Data Science Bowl -- Find the nuclei in divergent images to advance medical discovery._ However, The result has showed this dataset cannot help to improve our model's performance. The lowest *val_loss* of __from stracth__ model is 0.02164, while that of __on kaggle dataset__ model is 0.02295. The difference is not evident. Still, Many functions are adaptations from its notebooks, including [nuclei-overview-to-submission](https://www.kaggle.com/kmader/nuclei-overview-to-submission/notebook), [keras-u-net-starter](https://www.kaggle.com/keegil/keras-u-net-starter-lb-0-277/notebook), [identification-and-segmentation-of-nuclei-in-cells](https://www.kaggle.com/paultimothymooney/identification-and-segmentation-of-nuclei-in-cells) and [basic-pure-computer-vision-segmentation](https://www.kaggle.com/gaborvecsei/basic-pure-computer-vision-segmentation-lb-0-229). Their insights did a great help. **Thank!**
 
@@ -119,7 +111,7 @@ We randomly sampled 20 well point-labelled images into a test set. By using a di
 | 13 |            1049 |              295 |              389 |    0.780506 |      0.729485 |   0.754134 |                      75 |
 | 14 |            1036 |              242 |              402 |    0.810642 |      0.720445 |   0.762887 |                      78 |
 
-![alt text](readme_imgs/12-23_10-19_metric.jpg "Learning rate")
+![Learning Rate](readme_imgs/12-23_10-19_metric.jpg "Learning rate")
 
 The correlation between image numbers and the performance could be described as below.
 
