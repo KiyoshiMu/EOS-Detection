@@ -121,6 +121,17 @@ The correlation between image numbers and the performance could be described as 
 | sensitivity | -0.000585995 |    0.778447 |                 -0.360483 |          0.186858   |      0.000420542 |
 | f1_score    |  0.00085291  |    0.705113 |                  0.60903  |          0.015961   |      0.000308068 |
 
+### 1.5 Current Appearance (powered by Tkinter)
+
+Main Window
+![Main Window](readme_imgs/main_window.jpg "Main Window")
+
+Picture Window
+![Picture Window](readme_imgs/pic_window.jpg "Picture Window")
+
+Result Window
+![Result Window](readme_imgs/dect_window.jpg "Result Window")
+
 ## 2. Usage
 
 ### 2.1. Installation (MAKESHIFT version)
