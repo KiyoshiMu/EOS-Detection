@@ -125,10 +125,11 @@ def draw_circle(img, c, use_color, expansion=0, thickness=2, target=None):
     radius = target or int(radius) + expansion
     cv2.circle(img, center, radius, use_color, thickness)
 
-def draw_box(img, c, use_color, thickness=2, target=None):
+def draw_box(img, c, use_color, thickness=5, target=None):
     x, y, poss_w, poss_h = cv2.boundingRect(c)
-    w = h = target or max((poss_w, poss_h))
-    cv2.rectangle(img, (x, y), (x + w, y + h), use_color, thickness)
+    side = target or max((poss_w, poss_h))
+    line = round(side/3)
+    cv2.rectangle(img, (x-line, y-line), (x+2*line, y+2*line), use_color, thickness)
 
 def draw_colorful(img, cnts):
     label = np.zeros((img.shape[:2]))

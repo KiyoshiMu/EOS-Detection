@@ -57,12 +57,14 @@ class Unet_predictor:
         return pred_mask
 
     def predict_from_img(self, img, ID, visualize_dst=None, show_mask=True, 
-    method='circle', target=15, mark_num=False, assistance=False):
+    method='box', target=15, mark_num=False, assistance=False):
+        if method == 'box':
+            target = 51 # better visualization
         pred_cnts, pred_mask_img = self._mask_creator(img)
         # self.result[ID] = [cv2.contourArea(c) for c in pred_cnts]
         self.result[ID] = len(pred_cnts)
         if visualize_dst:
-            pred_out = mask_visualization(img, pred_cnts, method=method, target=target)
+            pred_out = mask_visualization(img, pred_cnts, method=method, target=target, color='green')
             if mark_num:
                 mark_text(pred_out, f'{self.result[ID]}')
             cv2.imwrite(os.path.join(visualize_dst, ID+'_pred.jpg'), pred_out)
