@@ -84,7 +84,7 @@ def mask_to_cnts_watershed_thresh(mask_img, threshold=0.5):
     # minMarker = np.min(marker)
     return segmentations_filters_special(mask_img.shape, marker)
 
-def mask_to_cnts_region(mask_img, for_real_mask=True, threshold=153):
+def mask_to_cnts_region(mask_img, for_real_mask=True, threshold=96):
     elevation_map = sobel(mask_img)
     markers = np.zeros_like(mask_img)
     markers[mask_img < 25] = 1

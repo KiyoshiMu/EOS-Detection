@@ -57,7 +57,7 @@ class Unet_predictor:
         return pred_mask
 
     def predict_from_img(self, img, ID, visualize_dst=None, show_mask=True, 
-    method='box', target=15, mark_num=False, assistance=False):
+    method='circle', target=15, mark_num=False, assistance=False):
         if method == 'box':
             target = 51 # better visualization
         pred_cnts, pred_mask_img = self._mask_creator(img)

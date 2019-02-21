@@ -134,7 +134,7 @@ Result Window
 
 ## 2. Usage
 
-### 2.1. Installation (MAKESHIFT version)
+### 2.1. Installation
 
 #### 2.1.1. Miniconda ~~Anaconda~~ -- Python data science platform 
 
@@ -156,17 +156,15 @@ There is no difference between these two versions if you only consider testing o
 
 **Continue, input following commands in your Anaconda Prompt**
 
-        conda create --name eos python=3.6 tensorflow-gpu opencv pandas keras scikit-learn pillow matplotlib scikit-image openpyxl
+        conda create --name eos python=3.6 tensorflow opencv pandas keras scikit-learn pillow matplotlib scikit-image openpyxl
 
 If you have GPU in your computer, add the following line to improve the speed of procession.
 
         conda install tensorflow-gpu
 
-__TODO (Tesing)__
-
 #### 2.1.3. Clone or Download
 
-We recommend you use git to _clone_ the [repository]https://github.com/Moo-YewTsing/EOS-Detection.git. by
+We recommend you use git to _clone_ the repository. by
 
         git clone https://github.com/Moo-YewTsing/EOS-Detection.git
 
@@ -204,5 +202,3 @@ tiles_dir is the path of the directory where tile images are.
 dst is the path where directories will be made and data will be saved.)
 
         python pipe_metric.py imgs_dir masks_dir tiles_dir dst
-
-__TODO__
