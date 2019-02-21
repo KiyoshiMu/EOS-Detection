@@ -59,6 +59,31 @@ def mask_to_cnts_watershed(mask_img, min_distance=3, for_real_mask=False):
 
     return segmentations_filters(mask_img.shape, labels)
 
+def mask_to_cnts_watershed_thresh(mask_img, threshold=0.5):
+
+    img = cv2.cvtColor(mask_img, cv2.COLOR_GRAY2BGR)
+    blur = cv2.GaussianBlur(img, (21, 21), 0)
+    gray = cv2.cvtColor(blur, cv2.COLOR_BGR2GRAY)
+    threshold = threshold * 255
+    _, thresh = cv2.threshold(gray, threshold, 255, cv2.THRESH_BINARY)
+
+    closingKernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3,3))
+    closed = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, closingKernel)
+    dilationKernel = np.ones((3,3), np.uint8)
+    bg = cv2.dilate(closed, dilationKernel, iterations=3)
+    dist_transform = cv2.distanceTransform(closed, cv2.DIST_L2, 5)
+    _, fg = cv2.threshold(dist_transform,0.7*dist_transform.max(), 255, 0)
+    fg = np.uint8(fg)
+    unknown = cv2.subtract(bg, fg)
+    _, marker = cv2.connectedComponents(fg)
+    marker = marker+1
+    marker[unknown==255] = 0
+
+    cv2.watershed(img, marker)
+    # maxMarker = np.max(marker)
+    # minMarker = np.min(marker)
+    return segmentations_filters_special(mask_img.shape, marker)
+
 def mask_to_cnts_region(mask_img):
     elevation_map = sobel(mask_img)
     markers = np.zeros_like(mask_img)
@@ -105,8 +130,10 @@ def pred_mask_to_cnts_old(pred_mask_img):
     pred_cnts = mask2contour(canvas)
     return pred_cnts
 
-def pred_mask_to_cnts(pred_mask_img, region=True):
-    if region:
+def pred_mask_to_cnts(pred_mask_img, region=True, thresh=None):
+    if thresh:
+        pred_cnts = mask_to_cnts_watershed_thresh(pred_mask_img, threshold=thresh)
+    elif region:
         pred_cnts = mask_to_cnts_region(pred_mask_img)
     else:
         pred_cnts = mask_to_cnts_watershed(pred_mask_img)
