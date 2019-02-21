@@ -48,15 +48,6 @@ def train_model(train_pkl_path, test_pkl_path, dst, start_num=None):
         model_train(X_train, Y_train, X_test, Y_test, model_name=str(train_img_num), dst=result_dst)
         gc.collect()
 
-def batch_stat():
-    pass
-    # TODO the 
-    # actor = Unet_predictor(model_p)
-
-
-    # actor.metric( img_p: str, label_p:str=None, show_info=False, 
-        # show_img=True, dst='.', name=None, show_mask=False, target=15, label_points=None)
-
 if __name__ == "__main__":
     train_pkl_path = sys.argv[1]
     test_pkl_path = sys.argv[2

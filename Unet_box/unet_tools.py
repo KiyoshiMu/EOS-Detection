@@ -84,15 +84,18 @@ def mask_to_cnts_watershed_thresh(mask_img, threshold=0.5):
     # minMarker = np.min(marker)
     return segmentations_filters_special(mask_img.shape, marker)
 
-def mask_to_cnts_region(mask_img):
+def mask_to_cnts_region(mask_img, for_real_mask=True, threshold=153):
     elevation_map = sobel(mask_img)
     markers = np.zeros_like(mask_img)
     markers[mask_img < 25] = 1
-    markers[mask_img > 153] = 2
+    markers[mask_img > threshold] = 2
 
     segmentation = watershed(elevation_map, markers)
     segmentation = ndi.binary_fill_holes(segmentation - 1)
     labels, _ = ndi.label(segmentation)
+    if for_real_mask:
+        return segmentations_filters_special(mask_img.shape, labels)
+
     return segmentations_filters(mask_img.shape, labels)
 
 def mark_text(img, text:str) -> None:
@@ -192,7 +195,9 @@ def mask_visualization(img, cnts, method='circle', **kargs):
             
     return cur_img
 
-def stats(label_num, pred_cnts, possible_right_cnts):
+def stats(label_num, pred_cnts, possible_right_cnts) -> list:
+    ''''retrun a list including "true_objects, pred_objects, true_positive, 
+    false_positive, false_negative, precision, sensitivity" in order'''
     true_objects = label_num
     pred_objects = len(pred_cnts)
     true_positive = len(possible_right_cnts)
