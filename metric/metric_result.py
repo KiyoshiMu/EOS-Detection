@@ -35,7 +35,7 @@ def evaluate(models_p:str, img_dir:str, refer_pkl:str, dst:str) -> None:
             elif isinstance(refer, str):
                 label_points = None
                 label_p = refer
-            actor.metric(img_p, name=name, label_p=label_p, label_points=label_points, dst=vis_dst)
+            actor.metric(img_p, name=name, label_p=label_p, label_points=label_points, dst=vis_dst, show_mask=True)
         show_result(actor.metric_record, actor.metric_keys.split(', '), 
         title='Metric', dst=vis_dst)
 

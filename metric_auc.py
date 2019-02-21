@@ -1,6 +1,7 @@
 import os
 import cv2
 import sys
+import numpy as np
 from collections import defaultdict
 from Unet_box.unet_tools import mask_to_cnts_region, overlap, stats, show_result
 from metric.metric_tools import load_pickle
@@ -15,7 +16,7 @@ def manual_thresh(mask_img, label_points, start=26):
         pred_cnts = mask_to_cnts_region(mask_img, threshold=threshold)
         possible_right_cnts, label_num = overlap(pred_cnts, label_points=label_points)
         values = stats(label_num, pred_cnts, possible_right_cnts)
-        record[threshold] = values
+        record[threshold] = np.array(values)
     return record
 
 def batch_roc(mask_dir, refer_pkl:str):
@@ -23,9 +24,9 @@ def batch_roc(mask_dir, refer_pkl:str):
     answers = load_pickle(refer_pkl)
     for name, fp in mask_findor(mask_dir):
         mask_img = cv2.imread(fp, 0)
-        label_points = answers[name]
+        label_points = answers[name.replace('_mask', '')]
         record = manual_thresh(mask_img, label_points)
-        for k, v in record:
+        for k, v in record.items():
             summary[k] = summary[k] + v
     return summary
 
