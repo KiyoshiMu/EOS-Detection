@@ -8,12 +8,12 @@ import sys
 
 def from_label_to_metric(img_dir, refer_dir:str, tiles_dir:str, dst:str, point_label=True):
     pickle_dir = join(dst, 'temp_pkl')
-    up_bar = train_test_info_creator(refer_dir, tiles_dir, pickle_dir, test_dir=r'E:\EOS\test') #makeshift!!!
+    up_bar = train_test_info_creator(mask_dir, tiles_dir, pickle_dir)
     test_pkl_p = abspath(join(pickle_dir, 'test.pkl'))
     other_pkl_p = abspath(join(pickle_dir, 'others.pkl'))
     print('Path collection, done!')
     # point_creator will be changed in the future, now we use the mask directory. This directory will be replaced by point_label_dir.
-    point_creator(refer_dir, 'refer', pickle_dir, point_label=point_label, limit_pkl=test_pkl_p)
+    point_creator(mask_dir, 'refer', pickle_dir, limit_pkl=test_pkl_p)
     refer_pkl_p = join(pickle_dir, 'refer.pkl')
     print('Refer points, done!')
 
@@ -29,7 +29,7 @@ def from_label_to_metric(img_dir, refer_dir:str, tiles_dir:str, dst:str, point_l
 
 if __name__ == "__main__":
     img_dir = sys.argv[1]
-    refer_dir = sys.argv[2]
+    mask_dir = sys.argv[2]
     tiles_dir = sys.argv[3]
     dst = sys.argv[4]
-    from_label_to_metric(img_dir, refer_dir, tiles_dir, dst)
+    from_label_to_metric(img_dir, mask_dir, tiles_dir, dst)
